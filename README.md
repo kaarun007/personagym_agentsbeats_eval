@@ -19,9 +19,8 @@ The code evaluates "personas" (simulated characters) by placing them in specific
 5. Aggregation: Scores across all tasks are averaged to produce a final PersonaScore.
       - Save Results & Scores
 
-## Agentified State:
 
-# PersonaGym Agent Architecture
+# PersonaGym Agent Agentified Solution
 
 ## High-Level Design
 ```mermaid
