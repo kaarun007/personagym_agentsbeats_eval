@@ -26,8 +26,8 @@ The code evaluates "personas" (simulated characters) by placing them in specific
 ```mermaid
 graph TB
     subgraph "A2A Exposed Agent"
-        A[PersonaGym Coordinator Agent<br/>Google ADK] --> B[Parse Input Parameters]
-        B --> C[Load Personas Configuration]
+        A[PersonaGym Coordinator Agent<br/>Google ADK]
+        A --> C[Load Personas Configuration]
         C --> D[Serial Workflow Orchestration]
     end
     
@@ -144,8 +144,7 @@ sequenceDiagram
 
 ## Implementation Structure
 ```
-personagym_agent/
-├── main.py                          # A2A agent entry point
+personagym_agent/                   
 ├── coordinator_agent.py              # Coordinator agent definition
 ├── workflow/
 │   ├── settings_selector_agent.py
