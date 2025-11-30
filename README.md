@@ -172,3 +172,23 @@ personagym_agent/
 5. **AgentBeats Native**: Direct integration for metrics tracking and visualization
 6. **Stateless Execution**: Each workflow run is independent and reproducible
 
+## Project Setup
+
+1. Setup the project on your local machine
+```sh
+git clone https://github.com/kaarun007/personagym_agentsbeats_eval.git
+python3 -m venv .venv
+. .venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+2. Create a `.env` file in the project's `src/` directory
+```sh
+cp src/.env.template src/.env
+```
+Configure the values of the environment variables in the `.env` file as needed. You will also need to add your LLM API keys in the `.env`. For example, if using models from HuggingFace, you will need to configure the variable `HF_TOKEN`.
+
+3. Test run the agent via
+```sh
+adk run src/agents/personagym_coordinator
+```

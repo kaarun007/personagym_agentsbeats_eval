@@ -6,9 +6,6 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-class SettingsSelector:
-    pass
-
 # NOTE: Using a manual list temporarily until the file read tool is available
 settings_list = [
     "Wedding",
@@ -41,8 +38,8 @@ Environments: {settings_list}
 """
 
 root_agent = Agent(
-    name="personagym_coordinator",
-    description="Agent that orchestrates the PersonaGym agent evaluation",
-    model=LiteLlm(model=os.environ["GENERAL_MODEL"]),
+    name="settings_selector",
+    description="Agent that selects appropriate settings/environments in which to evaluate a particular persona",
+    model=LiteLlm(model=os.environ["SETTINGS_MODEL"]),
     instruction=system_prompt
 )
