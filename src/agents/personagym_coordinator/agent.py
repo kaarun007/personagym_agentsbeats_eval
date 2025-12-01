@@ -9,13 +9,6 @@ from personagym_coordinator.sub_agents.question_generator import root_agent as q
 from dotenv import load_dotenv
 load_dotenv()
 
-class PersonaGymCoordinator:
-    def __init__(self):
-        pass
-
-    def run(self):
-        print("PersonaGym Coordinator running...")
-
 root_agent = SequentialAgent(
     name="personagym_coordinator",
     description="Orchestrates the PersonaGym evaluation workflow",
