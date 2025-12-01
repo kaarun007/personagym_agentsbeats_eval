@@ -182,6 +182,7 @@ brew install uv
 2. Setup the project on your local machine
 ```sh
 git clone https://github.com/kaarun007/personagym_agentsbeats_eval.git
+cd personagym_agentsbeats_eval
 uv venv
 . .venv/bin/activate
 uv sync
