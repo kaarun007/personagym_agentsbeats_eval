@@ -160,7 +160,7 @@ personagym_agent/
 │   ├── tasks.json
 │   └── rubrics_template.json
 ├── agent_card.py                     # A2A agent card definition
-└── requirements.txt
+└── pyproject.toml
 ```
 
 ## Key Design Principles
@@ -174,12 +174,17 @@ personagym_agent/
 
 ## Project Setup
 
-1. Setup the project on your local machine
+1. Install `uv` if it is not already installed on your machine
+```sh
+brew install uv
+```
+
+2. Setup the project on your local machine
 ```sh
 git clone https://github.com/kaarun007/personagym_agentsbeats_eval.git
-python3 -m venv .venv
+uv venv
 . .venv/bin/activate
-pip3 install -r requirements.txt
+uv sync
 ```
 
 2. Create a `.env` file in the project's `src/` directory

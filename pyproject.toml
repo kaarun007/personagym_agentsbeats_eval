@@ -1,0 +1,11 @@
+[project]
+name = "personagym-agentsbeats-eval"
+version = "0.1.0"
+description = "PersonaGym Evals Green Agent"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "google-adk[a2a]>=1.19.0",
+    "litellm>=1.80.7",
+    "openai>=2.8.1",
+]
