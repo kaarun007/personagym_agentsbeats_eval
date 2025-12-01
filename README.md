@@ -187,13 +187,13 @@ uv venv
 uv sync
 ```
 
-2. Create a `.env` file in the project's `src/` directory
+3. Create a `.env` file in the project's `src/` directory
 ```sh
 cp src/.env.template src/.env
 ```
 Configure the values of the environment variables in the `.env` file as needed. You will also need to add your LLM API keys in the `.env`. For example, if using models from HuggingFace, you will need to configure the variable `HF_TOKEN`.
 
-3. Test run the agent via
+4. Test run the agent via
 ```sh
 adk run src/agents/personagym_coordinator
 ```
