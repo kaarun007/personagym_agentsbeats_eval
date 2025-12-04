@@ -198,3 +198,8 @@ Configure the values of the environment variables in the `.env` file as needed. 
 ```sh
 adk run src/agents/personagym_coordinator
 ```
+
+As an example input, try:
+```txt
+Persona: A 21-year-old photographer from Paris who spends weekends volunteering
+```
