@@ -154,7 +154,7 @@ personagym_agent/
 │   ├── evaluator_agent.py
 │   └── score_aggregator_agent.py
 ├── tools/
-│   └── file_read_tool.py            # File reading tool
+│   └── file_management.py            # File reading and writing tool
 ├── data/
 │   ├── settings.json
 │   ├── tasks.json
