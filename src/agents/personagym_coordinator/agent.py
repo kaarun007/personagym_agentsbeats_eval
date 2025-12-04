@@ -15,13 +15,14 @@ load_dotenv()
 evaluation_task_workflows = []
 evaluation_tasks = [EvaluationTask.EXPECTED_ACTION, EvaluationTask.TOXICITY]
 for task in evaluation_tasks:
+    task_name = task.name.lower()
     evaluation_task_workflow = SequentialAgent(
-        name=f"{task.name.lower()}_eval_workflow",
+        name=f"{task_name}_eval_workflow",
         description=f"Evaluation task workflow for the task {task.value}",
         sub_agents=[
             create_question_agent(task=task),
-            create_persona_agent(name=f"persona_agent_for_{task.name.lower()}_eval"),
-            create_rubric_formatter_agent(name=f"rubric_formatter_agent_for_{task.name.lower()}_eval")
+            create_persona_agent(name=f"persona_agent_for_{task_name}_eval"),
+            create_rubric_formatter_agent(name=f"rubric_formatter_agent_for_{task_name}_eval")
         ]
     )
     evaluation_task_workflows.append(evaluation_task_workflow)
