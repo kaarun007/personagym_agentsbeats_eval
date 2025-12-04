@@ -174,12 +174,16 @@ personagym_agent/
 
 ## Project Setup
 
-1. Install `uv` if it is not already installed on your machine
+1. Setup the project on your local machine. You can do this using either `pip` or `uv`.
+
+### Option #1: Using `uv`
+
+Install `uv` if it is not already installed on your machine
 ```sh
 brew install uv
 ```
 
-2. Setup the project on your local machine
+Then clone the repo, set up a virtual environment and install dependencies.
 ```sh
 git clone https://github.com/kaarun007/personagym_agentsbeats_eval.git
 cd personagym_agentsbeats_eval
@@ -188,13 +192,25 @@ uv venv
 uv sync
 ```
 
-3. Create a `.env` file in the project's `src/` directory
+### Option #2: Using `pip`
+
+Clone the repo, set up a virtual environment and install dependencies using default Python and the `pip` package manager. Ensure you are using Python version 3.13.
+
+```sh
+git clone https://github.com/kaarun007/personagym_agentsbeats_eval.git
+cd personagym_agentsbeats_eval
+python3 -m venv .venv
+. .venv/bin/activate
+pip3 install -r requirements.txt
+```
+
+2. Create a `.env` file in the project's `src/` directory
 ```sh
 cp src/.env.template src/.env
 ```
 Configure the values of the environment variables in the `.env` file as needed. You will also need to add your LLM API keys in the `.env`. For example, if using models from HuggingFace, you will need to configure the variable `HF_TOKEN`.
 
-4. Test run the agent via
+3. Test run the agent via
 ```sh
 adk run src/agents/personagym_coordinator
 ```
