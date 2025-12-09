@@ -2,6 +2,10 @@
 # This agent handles the A2A protocol and orchestrates the workflow.
 
 from google.adk.agents import ParallelAgent, SequentialAgent
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
+from a2a.types import AgentCard, AgentSkill, AgentCapabilities
+import argparse
+import uvicorn
 
 from personagym_coordinator.sub_agents.settings_selector import root_agent as settings_selector_agent
 from personagym_coordinator.sub_agents.question_generator import EvaluationTask, create_question_agent
@@ -34,9 +38,51 @@ evaluation_task_coordinator = ParallelAgent(
 # Expose the main sequential workflow as the root agent
 root_agent = SequentialAgent(
     name="personagym_coordinator",
-    description="Orchestrates the PersonaGym evaluation workflow",
+    description="Orchestrates the PersonaGym evaluation workflow. Expects a persona description as input.",
     sub_agents=[
         settings_selector_agent,
         evaluation_task_coordinator
     ]
 )
+
+def create_agent_card(url: str) -> AgentCard:
+    """Create the A2A agent card for PersonaGym"""
+    skill = AgentSkill(
+        id='evaluate_persona',
+        name='Evaluate Persona Behavior',
+        description='Evaluates a persona by selecting appropriate settings and generating evaluation questions.',
+        tags=['persona', 'evaluation', 'behavioral-analysis'],
+        examples=["""
+                {
+                    "persona": "A grumpy high school math teacher who secretly loves poetry."
+                }
+        """]
+    )
+    
+    agent_card = AgentCard(
+        name="PersonaGymCoordinator",
+        description="Orchestrates the PersonaGym evaluation workflow. Expects a persona description as input.",
+        url=url,
+        version="1.0.0",
+        default_input_modes=['text'],
+        default_output_modes=['text'],
+        capabilities=AgentCapabilities(streaming=False),
+        skills=[skill],
+    )
+    return agent_card
+
+def main():
+    parser = argparse.ArgumentParser(description="Run the PersonaGym Coordinator Agent.")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="Host to bind the server")
+    parser.add_argument("--port", type=int, default=8001, help="Port to bind the server")
+    parser.add_argument("--card-url", type=str, help="External URL to provide in the agent card")
+    args = parser.parse_args()
+
+    card_url = args.card_url or f"http://{args.host}:{args.port}/"
+    agent_card = create_agent_card(card_url)
+    
+    a2a_app = to_a2a(root_agent, agent_card=agent_card)
+    uvicorn.run(a2a_app, host=args.host, port=args.port)
+
+if __name__ == "__main__":
+    main()
