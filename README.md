@@ -154,7 +154,8 @@ personagym_agent/
 │   ├── evaluator_agent.py
 │   └── score_aggregator_agent.py
 ├── tools/
-│   └── file_read_tool.py            # File reading tool
+│   ├── file_read_tool.py             # File reading tool
+│   └── file_write_tool.py            # File writing tool
 ├── data/
 │   ├── settings.json
 │   ├── tasks.json
@@ -174,27 +175,72 @@ personagym_agent/
 
 ## Project Setup
 
-1. Install `uv` if it is not already installed on your machine
-```sh
-brew install uv
-```
+Follow these steps to set up the project on your local machine.
 
-2. Setup the project on your local machine
+### Prerequisites
+
+- Ensure you have Python 3.13 installed on your system.
+- Install either `uv` or `pip`:
+
+  - **Install `uv`**:
+    - **Mac**:
+      ```sh
+      brew install uv
+      ```
+    - **Windows**:
+      ```powershell
+      powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+      ```
+
+  - **Install `pip`**:
+    - `pip` is included by default with Python installations. If not, you can install it by downloading `get-pip.py` from [pip's official website](https://pip.pypa.io/en/stable/installation/) and running:
+      ```sh
+      python get-pip.py
+      ```
+
+### Setup Instructions
+
+1. Clone the Repository
 ```sh
 git clone https://github.com/kaarun007/personagym_agentsbeats_eval.git
 cd personagym_agentsbeats_eval
-uv venv
-. .venv/bin/activate
-uv sync
 ```
 
-3. Create a `.env` file in the project's `src/` directory
-```sh
-cp src/.env.template src/.env
-```
-Configure the values of the environment variables in the `.env` file as needed. You will also need to add your LLM API keys in the `.env`. For example, if using models from HuggingFace, you will need to configure the variable `HF_TOKEN`.
+2. Set Up a Virtual Environment
 
-4. Test run the agent via
+- **Using `uv`**:
+  ```sh
+  uv venv
+  . .venv/bin/activate  # Use . .venv\Scripts\activate for Windows
+  uv sync
+  ```
+
+- **Using `pip`**:
+  ```sh
+  python3 -m venv .venv
+  . .venv/bin/activate  # Use . .venv\Scripts\activate for Windows
+  pip install -r requirements.txt
+  ```
+
+### Configure Environment Variables
+
+1. **Create a `.env` file**:
+   ```sh
+   cp src/.env.template src/.env
+   ```
+
+2. **Update the `.env` file**:
+   - Open the `.env` file and configure the required environment variables.
+   - Add your LLM API keys (e.g., `HF_TOKEN` for HuggingFace models).
+
+### Test the Setup
+
+Run the agent to verify the setup:
 ```sh
 adk run src/agents/personagym_coordinator
+```
+
+As an example input, try:
+```txt
+Persona: A 21-year-old photographer from Paris who spends weekends volunteering
 ```
