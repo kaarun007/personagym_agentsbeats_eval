@@ -26,7 +26,7 @@ for task in evaluation_tasks:
         sub_agents=[
             create_question_agent(task=task),
             create_persona_agent(name=f"persona_agent_for_{task_name}_eval"),
-            create_rubric_formatter_agent(name=f"rubric_formatter_agent_for_{task_name}_eval")
+            create_rubric_formatter_agent(task=task)
         ]
     )
     evaluation_task_workflows.append(evaluation_task_workflow)
