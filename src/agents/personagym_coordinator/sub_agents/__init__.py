@@ -1,3 +1,0 @@
-"""
-PersonaGym subagents module
-"""
