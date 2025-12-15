@@ -26,16 +26,13 @@ Rubrics:
 {rubrics}
 """
 
-first_eval_agent = Agent(
-    name="personagym_evaluator_1",
-    description="Agent that evaluates answers given by a persona agent",
-    model=LiteLlm(model=os.environ["EVAL_1_MODEL"]),
-    instruction=system_prompt
-)
-
-second_eval_agent = Agent(
-    name="personagym_evaluator_2",
-    description="Agent that evaluates answers given by a persona agent",
-    model=LiteLlm(model=os.environ["EVAL_2_MODEL"]),
-    instruction=system_prompt
-)
+def create_evaluator_agent(agent_name: str, model_name: str) -> Agent:
+    """
+    Creates an instance of the Evaluator Agent.
+    """
+    return Agent(
+        name=agent_name,
+        description="Agent that evaluates answers given by a persona agent",
+        model=LiteLlm(model=os.environ[model_name]),
+        instruction=system_prompt
+    )
