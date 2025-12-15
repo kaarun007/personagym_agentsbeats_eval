@@ -1,0 +1,16 @@
+FROM ghcr.io/astral-sh/uv:python3.12-trixie
+
+RUN adduser agentbeats
+USER agentbeats
+WORKDIR /home/agentbeats/personagym
+
+COPY pyproject.toml uv.lock README.md ./
+COPY src src
+
+RUN \
+    --mount=type=cache,target=/home/agentbeats/.cache/uv,uid=1000 \
+    uv sync --locked
+
+ENTRYPOINT ["uv", "run", "--env-file", "src/.env", "src/agents/personagym_evaluator/agent.py"]
+CMD ["--host", "0.0.0.0"]
+EXPOSE 9019
