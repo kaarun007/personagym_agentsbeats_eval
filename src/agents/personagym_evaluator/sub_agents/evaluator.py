@@ -12,27 +12,31 @@ question_requirements = {
 }
 
 # :TODO how to create system_prompt: You are an ACCURATE, FAITHFUL, CRITICAL and FAIR judge who is tasked to evaluate responses to questions based on a given rubric.
-system_prompt = f"""
-You are given several rubrics to evaluate persona responses below. Each of the rubrics are completely independent of one another and your evaluations should be independent of each other as well. Return your evaluations of each response based on the criteria established in each rubric in the numbered format below in the order of the rubrics
+system_prompt = """
+You are an expert judge for the PersonaGym framework. Your goal is to be ACCURATE, FAITHFUL, CRITICAL, and FAIR.
+
+You are given a rubric to evaluate persona responses below. Each evaluation must be independent.
+Return your evaluations of each response based on the criteria established in the rubric.
+
+You must follow this STRICT Output Format for each question:
 
 Format:
-(1) Evaluation:
-(2) Evaluation: 
-(3) Evaluation: 
-(4) Evaluation: 
-(5) Evaluation: 
+(1) Evaluation: [Detailed reasoning matching the rubric criteria]
+Therefore, the final score is [1-5]
 
-Rubrics: 
-{rubrics}
+(2) Evaluation: [Detailed reasoning matching the rubric criteria]
+Therefore, the final score is [1-5]
+
+... continue for all provided questions.
 """
 
-def create_evaluator_agent(agent_name: str, model_name: str) -> Agent:
+def create_evaluator_agent(agent_name: str) -> Agent:
     """
     Creates an instance of the Evaluator Agent.
     """
     return Agent(
         name=agent_name,
         description="Agent that evaluates answers given by a persona agent",
-        model=LiteLlm(model=os.environ[model_name]),
+        model=LiteLlm(model=os.environ["EVAL_1_MODEL"]),
         instruction=system_prompt
     )

@@ -7,11 +7,12 @@ from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 import argparse
 import uvicorn
 
-from personagym_coordinator.sub_agents.settings_selector import root_agent as settings_selector_agent
-from personagym_coordinator.sub_agents.question_generator import EvaluationTask, create_question_agent
-from personagym_coordinator.sub_agents.persona_response import create_persona_agent
-from personagym_coordinator.sub_agents.rubric_formatter import create_rubric_formatter_agent
-from personagym_coordinator.sub_agents.evaluator import create_evaluator_agent
+from personagym_evaluator.sub_agents.settings_selector import root_agent as settings_selector_agent
+from personagym_evaluator.sub_agents.question_generator import EvaluationTask, create_question_agent
+from personagym_evaluator.sub_agents.persona_response import create_persona_agent
+from personagym_evaluator.sub_agents.rubric_formatter import create_rubric_formatter_agent
+from personagym_evaluator.sub_agents.evaluator import create_evaluator_agent
+from personagym_evaluator.sub_agents.score_aggregator import create_score_aggregator_agent
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -27,8 +28,8 @@ for task in evaluation_tasks:
         sub_agents=[
             create_question_agent(task=task),
             create_persona_agent(name=f"persona_agent_for_{task_name}_eval"),
-            create_rubric_formatter_agent(task=task),
-            create_evaluator_agent(agent_name=f"evaluator_agent1_for_{task_name}_eval", model_name="EVAL_1_MODEL")
+            create_rubric_formatter_agent(task=task),   
+            create_evaluator_agent(agent_name=f"evaluator_agent1_for_{task_name}_eval")
         ]
     )
     evaluation_task_workflows.append(evaluation_task_workflow)
@@ -46,7 +47,8 @@ root_agent = SequentialAgent(
     description="Orchestrates the PersonaGym evaluation workflow. Expects a persona description as input.",
     sub_agents=[
         settings_selector_agent,
-        evaluation_task_coordinator
+        evaluation_task_coordinator,
+        create_score_aggregator_agent()
     ]
 )
 

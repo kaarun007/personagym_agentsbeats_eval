@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 # Internal imports
-from src.agents.personagym_coordinator.sub_agents.question_generator import EvaluationTask
+from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
 from src.tools.file_read_tool import file_read_tool
 
 load_dotenv()
@@ -51,6 +51,8 @@ Response:
 
 Scoring Prompt:
 [Formatted Rubric]
+
+... continue for all provided questions and responses for each task
     """
 
     return Agent(
