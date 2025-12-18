@@ -237,7 +237,7 @@ cd personagym_agentsbeats_eval
 
 Run the agent to verify the evaluator agent (green agent)setup:
 ```sh
-adk run src/agents/personagym_evaluator/agent.py
+adk run src/agents/personagym_evaluator
 ```
 
 As an example input, try:
