@@ -10,7 +10,7 @@ load_dotenv()
 
 RESULTS_TEMPLATE_PATH = "output/results.md"
 
-system_prompt = """
+system_prompt = f"""
 You are the Score Aggregator for the PersonaGym framework.
 You will receive raw evaluation texts from multiple agents.
 
