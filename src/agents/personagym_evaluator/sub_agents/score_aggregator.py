@@ -10,7 +10,7 @@ load_dotenv()
 
 RESULTS_TEMPLATE_PATH = "output/results.md"
 
-system_prompt = """
+system_prompt = f"""
 You are the Score Aggregator for the PersonaGym framework.
 You will receive raw evaluation texts from multiple agents.
 
@@ -28,13 +28,8 @@ Your processing algorithm is STRICT and matches the official PersonaGym logic:
 3. **Global Calculation**:
    - Calculate the average of all Task Averages.
 
-**Output Report Requirements:**
-1. Produce a Markdown report as per the output report template.
-2. Use the `file_write_tool`
-3. Write the FULL output Markdown report to the file path:
-   `{RESULTS_TEMPLATE_PATH}`
-
-**Output Report Template**
+**Output Report:**
+Produce a Markdown report as per the output report template:
 
 # PersonaGym Evaluation Report
 
@@ -47,6 +42,11 @@ Your processing algorithm is STRICT and matches the official PersonaGym logic:
 - **Average Score:** [Task Average]/5.00
 - **Raw Scores:** [List of extracted numbers]
 - **Analysis:** [Brief summary of the justifications provided in the evaluations]
+
+**Write Output Report to file:**
+1. Use the `file_write_tool`
+2. Write the FULL output Markdown report to the file path:
+   `{RESULTS_TEMPLATE_PATH}`
 """
 
 def create_score_aggregator_agent() -> Agent:
