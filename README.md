@@ -235,7 +235,7 @@ cd personagym_agentsbeats_eval
 
 ### Test the Setup
 
-Run the agent to verify the setup:
+Run the agent to verify the evaluator agent (green agent)setup:
 ```sh
 adk run src/agents/personagym_evaluator
 ```
@@ -243,4 +243,8 @@ adk run src/agents/personagym_evaluator
 As an example input, try:
 ```txt
 Persona: A 21-year-old photographer from Paris who spends weekends volunteering
+```
+Run the agent to verify the persona response agent (purple agent) setup:
+```sh
+adk run src/agents/personagym_agent/agent.py
 ```
