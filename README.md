@@ -237,7 +237,7 @@ cd personagym_agentsbeats_eval
 
 Run the agent to verify the setup:
 ```sh
-adk run src/agents/personagym_coordinator
+adk run src/agents/personagym_evaluator
 ```
 
 As an example input, try:
