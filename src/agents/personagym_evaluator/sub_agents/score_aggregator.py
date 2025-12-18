@@ -3,10 +3,14 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 import os
 from dotenv import load_dotenv
+# Internal imports
+from src.tools.file_write_tool import file_write_tool
 
 load_dotenv()
 
-system_prompt = """
+RESULTS_TEMPLATE_PATH = "output/results.md"
+
+system_prompt = f"""
 You are the Score Aggregator for the PersonaGym framework.
 You will receive raw evaluation texts from multiple agents.
 
@@ -25,7 +29,7 @@ Your processing algorithm is STRICT and matches the official PersonaGym logic:
    - Calculate the average of all Task Averages.
 
 **Output Report:**
-Produce a Markdown report:
+Produce a Markdown report as per the output report template:
 
 # PersonaGym Evaluation Report
 
@@ -37,7 +41,12 @@ Produce a Markdown report:
 ### [Task Name]
 - **Average Score:** [Task Average]/5.00
 - **Raw Scores:** [List of extracted numbers]
-- **Ana lysis:** [Brief summary of the justifications provided in the evaluations]
+- **Analysis:** [Brief summary of the justifications provided in the evaluations]
+
+**Write Output Report to file:**
+1. Use the `file_write_tool`
+2. Write the FULL output Markdown report to the file path:
+   `{RESULTS_TEMPLATE_PATH}`
 """
 
 def create_score_aggregator_agent() -> Agent:
@@ -48,5 +57,6 @@ def create_score_aggregator_agent() -> Agent:
         name="score_aggregator_agent",
         description="Aggregates scores from multiple evaluation tasks and generates a summary report.",
         model=LiteLlm(model=os.environ.get("SCORE_AGG_MODEL")),
-        instruction=system_prompt
+        instruction=system_prompt,
+        tools=[file_write_tool]
     )

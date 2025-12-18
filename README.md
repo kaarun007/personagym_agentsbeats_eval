@@ -144,24 +144,45 @@ sequenceDiagram
 
 ## Implementation Structure
 ```
-personagym_agent/                   
-├── coordinator_agent.py              # Coordinator agent definition
-├── workflow/
-│   ├── settings_selector_agent.py
-│   ├── question_generator_agent.py
-│   ├── persona_response_agent.py
-│   ├── rubric_formatter_agent.py
-│   ├── evaluator_agent.py
-│   └── score_aggregator_agent.py
-├── tools/
-│   ├── file_read_tool.py             # File reading tool
-│   └── file_write_tool.py            # File writing tool
-├── data/
-│   ├── settings.json
-│   ├── tasks.json
-│   └── rubrics_template.json
-├── agent_card.py                     # A2A agent card definition
-└── pyproject.toml
+personagym_agentsbeats_eval/       
+├── scenarios
+│   └── scenario.toml
+├── src
+│   ├── agents
+│   │   ├── personagym_agent
+│   │   │   ├──__init__.py
+│   │   │   └── agent.py
+│   │   ├── personagym_evaluator
+│   │   │   ├── sub_agents
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── evaluator.py
+│   │   │   │   ├── persona_response.py
+│   │   │   │   ├── question_generator.py
+│   │   │   │   ├── results_storage.py
+│   │   │   │   ├── rubric_formatter.py
+│   │   │   │   ├── score_aggregator.py
+│   │   │   │   └── settings_selector.py
+│   │   │   ├── __init__.py
+│   │   │   └── agent.py
+│   │   └── __init__.py
+│   ├── data
+│   │   ├── rubrics_template.json
+│   │   ├── settings.json
+│   │   └── tasks.json
+│   ├── tools
+│   │   ├── __init__.py
+│   │   ├── file_read_tool.py
+│   │   └── file_write_tool.py
+│   ├── workflows
+│   │   ├── __init__.py
+│   │   └── serial_evaluation.py
+│   └── main.py
+├── Dockerfile.agent
+├── Dockerfile.evaluator
+├── pyproject.toml
+├── README.md
+├── requirements.txt
+└── uv.lock
 ```
 
 ## Key Design Principles
@@ -246,5 +267,5 @@ Persona: A 21-year-old photographer from Paris who spends weekends volunteering
 ```
 Run the agent to verify the persona response agent (purple agent) setup:
 ```sh
-adk run src/agents/personagym_agent/agent.py
+adk run src/agents/personagym_agent
 ```
