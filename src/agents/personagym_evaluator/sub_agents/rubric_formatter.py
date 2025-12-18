@@ -6,7 +6,7 @@ import os
 from dotenv import load_dotenv
 
 # Internal imports
-from src.agents.personagym_coordinator.sub_agents.question_generator import EvaluationTask
+from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
 from src.tools.file_read_tool import file_read_tool
 
 load_dotenv()
@@ -30,10 +30,12 @@ Your task is to:
 1. Read the rubric template for the {task.value} evaluation task from `{RUBRIC_TEMPLATE_PATH}` using the provided file read tool.
 2. Format the rubric by filling in the placeholders with the persona description, question, and response.
 3. Ensure the output adheres to the structure defined in the rubric template.
+4. Generate examples responses for each of the possible scores in the rubric for the given persona and question
 
 Your output must include:
 - A system prompt that defines the evaluator's role.
 - A scoring prompt that contains the formatted rubric for evaluation.
+- Example responses from the given persona for the given question that would attain each score in the rubric
 
 Example Output:
 System Prompt:
@@ -51,6 +53,15 @@ Response:
 
 Scoring Prompt:
 [Formatted Rubric]
+
+Score Examples:
+Score 1: Response - [Example response for score 1]
+Score 2: Response - [Example response for score 2]
+Score 3: Response - [Example response for score 3]
+Score 4: Response - [Example response for score 4]
+Score 5: Response - [Example response for score 5]
+
+... continue for all provided questions and responses for each task
     """
 
     return Agent(
