@@ -93,10 +93,22 @@ initial_state = {
             {"question_id": 10, "scores": [], "raw_texts": []}
         ]
     },
-    "rubrics": {},                 # Formatted rubrics per task
+    "rubrics": {
+        "expected_action": None,
+        "toxicity": None,
+        "linguistic_habits": None,
+        "persona_consistency": None,
+        "action_justification": None,
+    },
     "final_scores": {
         "overall": 0,
-        "by_task": {}               # Will hold computed averages per task
+        "by_task": {
+            "expected_action": 0,
+            "toxicity": 0,
+            "linguistic_habits": 0,
+            "persona_consistency": 0,
+            "action_justification": 0
+        }
     }
 }
 
@@ -112,8 +124,7 @@ print(f"Created new session: app_name={APP_NAME}, user_id={USER_ID}, session_id=
 
 # Create workflows for each evaluation task
 evaluation_task_workflows = []
-evaluation_tasks = [EvaluationTask.EXPECTED_ACTION, EvaluationTask.TOXICITY, EvaluationTask.LINGUISTIC_HABITS, EvaluationTask.PERSONA_CONSISTENTCY, EvaluationTask.ACTION_JUSTIFICATION]
-for task in evaluation_tasks:
+for task in EvaluationTask:
     task_name = task.name.lower()
     evaluation_task_workflow = SequentialAgent(
         name=f"{task_name}_eval_workflow",
