@@ -3,7 +3,7 @@
 
 from google.adk.agents import ParallelAgent, SequentialAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
-from google.adk.session import InMemorySessionService
+from google.adk.sessions import InMemorySessionService
 from google.adk.runners import Runner
 from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 import argparse
@@ -25,15 +25,79 @@ USER_ID = "evalbox"
 SESSION_ID = "session123"
 
 initial_state = {
-    "selected_settings": [],        # Settings selected by the settings selector
-    "tasks": {},                    # Each task will have its own nested state
+    "persona_data": {
+        "description": "",       # Persona description
+        "responses": {}
+    },
+    "tasks": {
+        # Each task contains a list of evaluations per question
+        "expected_action": [
+            # Each entry corresponds to one question
+            {"question_id": 1, "scores": [], "raw_texts": []},
+            {"question_id": 2, "scores": [], "raw_texts": []},
+            {"question_id": 3, "scores": [], "raw_texts": []},
+            {"question_id": 4, "scores": [], "raw_texts": []},
+            {"question_id": 5, "scores": [], "raw_texts": []},
+            {"question_id": 6, "scores": [], "raw_texts": []},
+            {"question_id": 7, "scores": [], "raw_texts": []},
+            {"question_id": 8, "scores": [], "raw_texts": []},
+            {"question_id": 9, "scores": [], "raw_texts": []},
+            {"question_id": 10, "scores": [], "raw_texts": []}
+        ],
+        "toxicity": [
+            {"question_id": 1, "scores": [], "raw_texts": []},
+            {"question_id": 2, "scores": [], "raw_texts": []},
+            {"question_id": 3, "scores": [], "raw_texts": []},
+            {"question_id": 4, "scores": [], "raw_texts": []},
+            {"question_id": 5, "scores": [], "raw_texts": []},
+            {"question_id": 6, "scores": [], "raw_texts": []},
+            {"question_id": 7, "scores": [], "raw_texts": []},
+            {"question_id": 8, "scores": [], "raw_texts": []},
+            {"question_id": 9, "scores": [], "raw_texts": []},
+            {"question_id": 10, "scores": [], "raw_texts": []}
+        ],
+        "linguistic_habits": [
+            {"question_id": 1, "scores": [], "raw_texts": []},
+            {"question_id": 2, "scores": [], "raw_texts": []},
+            {"question_id": 3, "scores": [], "raw_texts": []},
+            {"question_id": 4, "scores": [], "raw_texts": []},
+            {"question_id": 5, "scores": [], "raw_texts": []},
+            {"question_id": 6, "scores": [], "raw_texts": []},
+            {"question_id": 7, "scores": [], "raw_texts": []},
+            {"question_id": 8, "scores": [], "raw_texts": []},
+            {"question_id": 9, "scores": [], "raw_texts": []},
+            {"question_id": 10, "scores": [], "raw_texts": []}
+        ],
+        "persona_consistency": [
+            {"question_id": 1, "scores": [], "raw_texts": []},
+            {"question_id": 2, "scores": [], "raw_texts": []},
+            {"question_id": 3, "scores": [], "raw_texts": []},
+            {"question_id": 4, "scores": [], "raw_texts": []},
+            {"question_id": 5, "scores": [], "raw_texts": []},
+            {"question_id": 6, "scores": [], "raw_texts": []},
+            {"question_id": 7, "scores": [], "raw_texts": []},
+            {"question_id": 8, "scores": [], "raw_texts": []},
+            {"question_id": 9, "scores": [], "raw_texts": []},
+            {"question_id": 10, "scores": [], "raw_texts": []}
+        ],
+        "action_justification": [
+            {"question_id": 1, "scores": [], "raw_texts": []},
+            {"question_id": 2, "scores": [], "raw_texts": []},
+            {"question_id": 3, "scores": [], "raw_texts": []},
+            {"question_id": 4, "scores": [], "raw_texts": []},
+            {"question_id": 5, "scores": [], "raw_texts": []},
+            {"question_id": 6, "scores": [], "raw_texts": []},
+            {"question_id": 7, "scores": [], "raw_texts": []},
+            {"question_id": 8, "scores": [], "raw_texts": []},
+            {"question_id": 9, "scores": [], "raw_texts": []},
+            {"question_id": 10, "scores": [], "raw_texts": []}
+        ]
+    },
+    "rubrics": {},                 # Formatted rubrics per task
     "final_scores": {
         "overall": 0,
-        "by_task": {}               # e.g., {"expected_action": 4.5, "toxicity": 3.8}
-    },
-    "persona_data": {},             # Stores persona description, responses, etc.
-    "rubrics": {},                  # Formatted rubrics per task
-    "raw_evaluations": {},          # Raw evaluation texts from evaluators
+        "by_task": {}               # Will hold computed averages per task
+    }
 }
 
 # Create Session Service
@@ -48,7 +112,7 @@ print(f"Created new session: app_name={APP_NAME}, user_id={USER_ID}, session_id=
 
 # Create workflows for each evaluation task
 evaluation_task_workflows = []
-evaluation_tasks = [EvaluationTask.EXPECTED_ACTION, EvaluationTask.TOXICITY]
+evaluation_tasks = [EvaluationTask.EXPECTED_ACTION, EvaluationTask.TOXICITY, EvaluationTask.LINGUISTIC_HABITS, EvaluationTask.PERSONA_CONSISTENTCY, EvaluationTask.ACTION_JUSTIFICATION]
 for task in evaluation_tasks:
     task_name = task.name.lower()
     evaluation_task_workflow = SequentialAgent(
