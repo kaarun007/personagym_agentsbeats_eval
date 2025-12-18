@@ -3,6 +3,8 @@
 
 from google.adk.agents import ParallelAgent, SequentialAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
+from google.adk.session import InMemorySessionService
+from google.adk.runners import Runner
 from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 import argparse
 import uvicorn
@@ -16,6 +18,33 @@ from personagym_evaluator.sub_agents.score_aggregator import create_score_aggreg
 
 from dotenv import load_dotenv
 load_dotenv()
+
+# Session constants
+APP_NAME = "personagym_agentsbeat_eval"
+USER_ID = "evalbox"
+SESSION_ID = "session123"
+
+initial_state = {
+    "selected_settings": [],        # Settings selected by the settings selector
+    "tasks": {},                    # Each task will have its own nested state
+    "final_scores": {
+        "overall": 0,
+        "by_task": {}               # e.g., {"expected_action": 4.5, "toxicity": 3.8}
+    },
+    "persona_data": {},             # Stores persona description, responses, etc.
+    "rubrics": {},                  # Formatted rubrics per task
+    "raw_evaluations": {},          # Raw evaluation texts from evaluators
+}
+
+# Create Session Service
+session_service = InMemorySessionService()
+session = session_service.create_session(
+    state=initial_state,  # Initial empty state
+    app_name=APP_NAME,
+    user_id=USER_ID,
+    session_id=SESSION_ID
+)
+print(f"Created new session: app_name={APP_NAME}, user_id={USER_ID}, session_id={SESSION_ID}")
 
 # Create workflows for each evaluation task
 evaluation_task_workflows = []
@@ -50,6 +79,13 @@ root_agent = SequentialAgent(
         evaluation_task_coordinator,
         create_score_aggregator_agent()
     ]
+)
+
+# Wrap root agent with Runner to integrate session
+runner = Runner(
+    agent=root_agent,
+    app_name=APP_NAME,
+    session_service=session_service
 )
 
 def create_agent_card(url: str) -> AgentCard:
@@ -87,8 +123,13 @@ def main():
 
     card_url = args.card_url or f"http://{args.host}:{args.port}/"
     agent_card = create_agent_card(card_url)
-    
-    a2a_app = to_a2a(root_agent, agent_card=agent_card)
+
+    # Expose root agent with session via A2A
+    a2a_app = to_a2a(
+        runner.agent,
+        agent_card=agent_card,
+        session_service=session_service
+    )
     uvicorn.run(a2a_app, host=args.host, port=args.port)
 
 if __name__ == "__main__":
