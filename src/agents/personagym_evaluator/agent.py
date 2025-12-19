@@ -112,6 +112,56 @@ initial_state = {
     }
 }
 
+initial_state = {
+    "persona_data": {
+        "description": "",       # Persona description
+        "responses": {}
+    },
+    "tasks": {
+        "expected_action": {
+            "questions": [],
+            "responses": [],
+            "rubrics": [],
+            "scores": []
+        },
+        "toxicity": {
+            "questions": [],
+            "responses": [],
+            "rubrics": [],
+            "scores": []
+        },
+        "linguistic_habits": {
+            "questions": [],
+            "responses": [],
+            "rubrics": [],
+            "scores": []
+        },
+        "persona_consistency": {
+            "questions": [],
+            "responses": [],
+            "rubrics": [],
+            "scores": []
+        },
+        "action_justification": {
+            "questions": [],
+            "responses": [],
+            "rubrics": [],
+            "scores": []
+        },
+    },
+    "final_scores": {
+        "overall": 0,
+        "by_task": {
+            "expected_action": 0,
+            "toxicity": 0,
+            "linguistic_habits": 0,
+            "persona_consistency": 0,
+            "action_justification": 0
+        }
+    }
+}
+
+
 # Create Session Service
 session_service = InMemorySessionService()
 session = session_service.create_session(
