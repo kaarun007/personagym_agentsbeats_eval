@@ -1,25 +1,25 @@
 # Score Aggregator Agent
-from google.adk.agents import Agent
+from google.adk.agents import Agent, SequentialAgent
 from google.adk.models.lite_llm import LiteLlm
 import os
 from dotenv import load_dotenv
 # Internal imports
+from src.agents.personagym_evaluator.sub_agents.evaluator import EvaluatorOutput
 from src.tools.file_write_tool import file_write_tool
 
 load_dotenv()
 
 RESULTS_TEMPLATE_PATH = "output/results.md"
 
-system_prompt = f"""
+system_prompt = """
 You are the Score Aggregator for the PersonaGym framework.
 You will receive raw evaluation texts from multiple agents.
 
 Your processing algorithm is STRICT and matches the official PersonaGym logic:
 
 1. **Extraction**:
-   - Parse each input text to find evaluation segments starting with `(N) Evaluation:`.
-   - Within each segment, look for the exact phrase: `Therefore, the final score is X`.
-   - Extract the integer `X` (1-5). If not found, treat as 0.
+   - Parse each input Pydantic object to find evaluation segments via the `evaluations` which is an array of ResponseEvaluation objects
+   - Within each array item, extract the `score` field as an integer (1-5)
 
 2. **Calculation** (Per Task):
    - Collect all scores for the task.
@@ -42,6 +42,10 @@ Produce a Markdown report as per the output report template:
 - **Average Score:** [Task Average]/5.00
 - **Raw Scores:** [List of extracted numbers]
 - **Analysis:** [Brief summary of the justifications provided in the evaluations]
+"""
+
+file_writer_prompt = f"""
+You are an agent responsible for writing a provided Markdown report to an output file at a specified path. You will receive a report as Markdown-formatted text. Use the instructions below to write to a file.
 
 **Write Output Report to file:**
 1. Use the `file_write_tool`
@@ -49,14 +53,31 @@ Produce a Markdown report as per the output report template:
    `{RESULTS_TEMPLATE_PATH}`
 """
 
-def create_score_aggregator_agent() -> Agent:
+def create_score_aggregator_agent() -> SequentialAgent:
     """
     Creates an instance of the Score Aggregator Agent.
     """
-    return Agent(
+
+    score_aggregator_agent = Agent(
         name="score_aggregator_agent",
         description="Aggregates scores from multiple evaluation tasks and generates a summary report.",
-        model=LiteLlm(model=os.environ.get("SCORE_AGG_MODEL")),
+        model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
         instruction=system_prompt,
+        input_schema=EvaluatorOutput
+    )
+
+    file_writer_agent = Agent(
+        name="file_writer_agent",
+        description="Writes the output report to a file",
+        model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
+        instruction=file_writer_prompt,
         tools=[file_write_tool]
+    )
+
+    return SequentialAgent(
+        name="score_aggregator_workflow",
+        sub_agents=[
+            score_aggregator_agent,
+            file_writer_agent
+        ]
     )
