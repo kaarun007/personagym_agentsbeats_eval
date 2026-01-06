@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
+from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
+
 load_dotenv()
 
 ### Evaluator System Prompt
@@ -21,6 +23,7 @@ You must follow this STRICT Output Format for each question:
 
 Format:
 {
+    evaluation_task: [The evaluation task type e.g. Expected Action]
     evaluations: [
         {
             "question": [Evaluation question #1],
@@ -38,6 +41,8 @@ Format:
         }
     ]
 }
+
+Each question evaluation will be a JSON object as defined above with the "question", "justification" and "score" fields. The length of the "evaluations" array should be equal to the total number of question-response pairs.
 """
 
 ### Result formatter
@@ -50,6 +55,7 @@ class ResponseEvaluation(BaseModel):
 
 # Output schema for agent
 class EvaluatorOutput(BaseModel):
+    evaluation_task: EvaluationTask
     evaluations: list[ResponseEvaluation] = Field(description="Array of persona response evaluations with scores")
 
 def create_evaluator_agent(agent_name: str) -> Agent:

@@ -1,9 +1,10 @@
 # Rubric Formatter Agent
-from google.adk.agents import Agent
+from google.adk.agents import Agent, SequentialAgent
 from google.adk.models.lite_llm import LiteLlm
 
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 # Internal imports
 from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
@@ -13,61 +14,133 @@ load_dotenv()
 
 RUBRIC_TEMPLATE_PATH = "src/data/rubrics_template.json"
 
+# Define the output schema for the example generator agent
+class ResponseExample(BaseModel):
+    score: int
+    example_response: str
+
+class ExamplesList(BaseModel):
+    question: str
+    examples: list[ResponseExample]
+
+class ExampleGeneratorOutput(BaseModel):
+    questions: list[ExamplesList]
+
+# Define the final output schema
+class ResponseToEvaluate(BaseModel):
+    question: str
+    response: str
+    examples: list[ResponseExample]
+
+class EvaluationRubric(BaseModel):
+    persona: str
+    evaluation_task: EvaluationTask
+    scoring_rubric: str
+    responses: list[ResponseToEvaluate]
+    
 # Define the Rubric Formatter Agent
-def create_rubric_formatter_agent(task: EvaluationTask) -> Agent:
+def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
     """
     Creates an instance of the Rubric Formatter Agent.
     """
     task_name = task.name.lower()
 
-    # Define the system prompt for the Rubric Formatter Agent
-    system_prompt = f"""
-You are a Rubric Formatter Agent. Your role is to format grading prompts for persona evaluation tasks.
+    # Define the system prompt for the Rubric Extractor Agent
+    rubric_extractor_system_prompt = f"""
+    You are a rubric extractor agent. Your role is to extract the appropriate rubric to be used to evaluate a persona's {task.value}.
 
-You will use the rubric templates provided in the file `{RUBRIC_TEMPLATE_PATH}`.
-
-Your task is to:
-1. Read the rubric template for the {task.value} evaluation task from `{RUBRIC_TEMPLATE_PATH}` using the provided file read tool.
-2. Format the rubric by filling in the placeholders with the persona description, question, and response.
-3. Ensure the output adheres to the structure defined in the rubric template.
-4. Generate examples responses for each of the possible scores in the rubric for the given persona and question
-
-Your output must include:
-- A system prompt that defines the evaluator's role.
-- A scoring prompt that contains the formatted rubric for evaluation.
-- Example responses from the given persona for the given question that would attain each score in the rubric
-
-Example Output:
-System Prompt:
-You are evaluating the following persona:
-[Persona Description]
-
-Evaluation Task:
-{task.value}
-
-Question:
-[Question]
-
-Response:
-[Response]
-
-Scoring Prompt:
-[Formatted Rubric]
-
-Score Examples:
-Score 1: Response - [Example response for score 1]
-Score 2: Response - [Example response for score 2]
-Score 3: Response - [Example response for score 3]
-Score 4: Response - [Example response for score 4]
-Score 5: Response - [Example response for score 5]
-
-... continue for all provided questions and responses for each task
+    Read the rubric template for the {task.value} evaluation task from `{RUBRIC_TEMPLATE_PATH}` using the provided `file_read_tool`. Rubrics for each different task type are contained within a JSON array under the key "rubrics". ONLY extract the rubric for the task type `{task.value}`. Return the rubric as a single JSON object as read from the file.
     """
 
-    return Agent(
-        name=f"rubric_formatter_agent_for_{task_name}_eval",
-        description="Agent that formats grading prompts using rubric templates and persona data",
+    # Define the system prompt to be used by the example generator agent
+    example_generator_system_prompt = """
+    You are an example generator agent. Your role is to read a provided scoring rubric used to evaluate responses from a given persona and generate example responses for each of the possible scores in the rubric for the given persona and question. You will adopt the behaviour of the given persona and provide a response for the given question where the quality of your response is based on the criteria specified in the rubric for that particular score.
+
+    Your output should conform to the following format:
+    {
+        "questions": [<Array of questions and corresponding example responses>]
+    }
+
+    You will populate the "questions" array with your generated example responses for each provided evaluation question, formatting using the JSON schema below:
+    {
+        "question": <Evaluation question>,
+        "examples": [
+            {
+                "score": 1,
+                "example_response": "<Example response for score 1>"
+            },
+            {
+                "score": 2,
+                "example_response": "<Example response for score 2>"
+            },
+            {
+                "score": 3,
+                "example_response": "<Example response for score 3>"
+            },
+            {
+                "score": 4,
+                "example_response": "<Example response for score 4>"
+            },
+            {
+                "score": 5,
+                "example_response": "<Example response for score 5>"
+            }
+        ]
+    }
+    This should be repeated once for each of the provided evaluation questions.
+    """
+
+    # Define the system prompt for the Rubric Formatter Agent
+    rubric_formatter_system_prompt = f"""
+    You are a Rubric Formatter Agent. Your role is to format grading prompts for persona evaluation tasks. Using the output from previous agents, create a full evaluation rubric for the purposes of evaluating a persona against the {task.value} evaluation task.
+
+    Format the rubric as a JSON object with the following schema, filling in the placeholders with appropriate values:
+    {{
+        "persona": [The persona to be evaluated],
+        "evaluation_task": {task},
+        "scoring_rubric": [The extracted rubric JSON],
+        "responses": [Array of responses to be evaluated]
+    }}
+
+    For each evaluation question, populate the responses array with a JSON object according to the following schema:
+    {{
+        "question": [The evaluation question],
+        "response": [The response from the persona agent],
+        "examples": [Array of generated example responses to the evaluation question for each score]
+    }}
+    """
+
+    rubric_extractor_agent = Agent(
+        name=f"rubric_extractor_agent_for_{task_name}_eval",
+        description="Agent that extracts the appropriate rubric from a full list of rubrics",
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
-        instruction=system_prompt,
+        instruction=rubric_extractor_system_prompt,
         tools=[file_read_tool]
     )
+
+    example_generator_agent = Agent(
+        name=f"example_generator_agent_for_{task_name}_eval",
+        description="Agent that generates response examples for each score in the provided rubric",
+        model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
+        instruction=example_generator_system_prompt,
+        output_schema=ExampleGeneratorOutput
+    )
+
+    rubric_formatter_agent = Agent(
+        name=f"rubric_formatter_agent_for_{task_name}_eval",
+        description="Agent that formats the final rubric and examples to pass on to the evaluator agent",
+        model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
+        instruction=rubric_formatter_system_prompt,
+        output_schema=EvaluationRubric
+    )
+
+    return SequentialAgent(
+        name=f"rubric_formatter_workflow_for_{task_name}_eval",
+        description=f"Workflow to generate the scoring rubric for evaluating a given persona for its {task_name}",
+        sub_agents=[
+            rubric_extractor_agent,
+            example_generator_agent,
+            rubric_formatter_agent
+        ]
+    )
+
