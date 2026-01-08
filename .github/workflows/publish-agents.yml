@@ -55,8 +55,12 @@ jobs:
             type=semver,pattern={{major}}
             # For main branch, create tag 'latest'
             type=raw,value=latest,enable={{is_default_branch}}
+            # For feature branches, create tag with branch name
+            type=ref,event=branch
             # For PRs, create tag 'pr-123'
             type=ref,event=pr
+            # Fallback: use SHA for any push
+            type=sha,prefix={{branch}}-
 
       - name: Build and push Docker image (${{ matrix.name }})
         id: build
