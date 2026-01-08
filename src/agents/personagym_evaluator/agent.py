@@ -24,92 +24,53 @@ APP_NAME = "personagym_agentsbeat_eval"
 USER_ID = "evalbox"
 SESSION_ID = "session123"
 
+# Initial State
 initial_state = {
-    "persona_data": {
-        "description": "",       # Persona description
-        "responses": {}
-    },
-    "tasks": {
-        # Each task contains a list of evaluations per question
-        "expected_action": [
-            # Each entry corresponds to one question
-            {"question_id": 1, "scores": [], "raw_texts": []},
-            {"question_id": 2, "scores": [], "raw_texts": []},
-            {"question_id": 3, "scores": [], "raw_texts": []},
-            {"question_id": 4, "scores": [], "raw_texts": []},
-            {"question_id": 5, "scores": [], "raw_texts": []},
-            {"question_id": 6, "scores": [], "raw_texts": []},
-            {"question_id": 7, "scores": [], "raw_texts": []},
-            {"question_id": 8, "scores": [], "raw_texts": []},
-            {"question_id": 9, "scores": [], "raw_texts": []},
-            {"question_id": 10, "scores": [], "raw_texts": []}
-        ],
-        "toxicity": [
-            {"question_id": 1, "scores": [], "raw_texts": []},
-            {"question_id": 2, "scores": [], "raw_texts": []},
-            {"question_id": 3, "scores": [], "raw_texts": []},
-            {"question_id": 4, "scores": [], "raw_texts": []},
-            {"question_id": 5, "scores": [], "raw_texts": []},
-            {"question_id": 6, "scores": [], "raw_texts": []},
-            {"question_id": 7, "scores": [], "raw_texts": []},
-            {"question_id": 8, "scores": [], "raw_texts": []},
-            {"question_id": 9, "scores": [], "raw_texts": []},
-            {"question_id": 10, "scores": [], "raw_texts": []}
-        ],
-        "linguistic_habits": [
-            {"question_id": 1, "scores": [], "raw_texts": []},
-            {"question_id": 2, "scores": [], "raw_texts": []},
-            {"question_id": 3, "scores": [], "raw_texts": []},
-            {"question_id": 4, "scores": [], "raw_texts": []},
-            {"question_id": 5, "scores": [], "raw_texts": []},
-            {"question_id": 6, "scores": [], "raw_texts": []},
-            {"question_id": 7, "scores": [], "raw_texts": []},
-            {"question_id": 8, "scores": [], "raw_texts": []},
-            {"question_id": 9, "scores": [], "raw_texts": []},
-            {"question_id": 10, "scores": [], "raw_texts": []}
-        ],
-        "persona_consistency": [
-            {"question_id": 1, "scores": [], "raw_texts": []},
-            {"question_id": 2, "scores": [], "raw_texts": []},
-            {"question_id": 3, "scores": [], "raw_texts": []},
-            {"question_id": 4, "scores": [], "raw_texts": []},
-            {"question_id": 5, "scores": [], "raw_texts": []},
-            {"question_id": 6, "scores": [], "raw_texts": []},
-            {"question_id": 7, "scores": [], "raw_texts": []},
-            {"question_id": 8, "scores": [], "raw_texts": []},
-            {"question_id": 9, "scores": [], "raw_texts": []},
-            {"question_id": 10, "scores": [], "raw_texts": []}
-        ],
-        "action_justification": [
-            {"question_id": 1, "scores": [], "raw_texts": []},
-            {"question_id": 2, "scores": [], "raw_texts": []},
-            {"question_id": 3, "scores": [], "raw_texts": []},
-            {"question_id": 4, "scores": [], "raw_texts": []},
-            {"question_id": 5, "scores": [], "raw_texts": []},
-            {"question_id": 6, "scores": [], "raw_texts": []},
-            {"question_id": 7, "scores": [], "raw_texts": []},
-            {"question_id": 8, "scores": [], "raw_texts": []},
-            {"question_id": 9, "scores": [], "raw_texts": []},
-            {"question_id": 10, "scores": [], "raw_texts": []}
-        ]
-    },
-    "rubrics": {
-        "expected_action": None,
-        "toxicity": None,
-        "linguistic_habits": None,
-        "persona_consistency": None,
-        "action_justification": None,
-    },
-    "final_scores": {
-        "overall": 0,
-        "by_task": {
-            "expected_action": 0,
-            "toxicity": 0,
-            "linguistic_habits": 0,
-            "persona_consistency": 0,
-            "action_justification": 0
-        }
-    }
+    # User / persona input
+    "persona": "",
+
+    # EXPECTED_ACTION
+    "expected_action_questions": [],
+    "expected_action_persona_responses": [],
+    "expected_action_raw_rubric": None,
+    "expected_action_examples": None,
+    "expected_action_rubric": None,
+    "expected_action_evaluations": None,
+
+    # TOXICITY
+    "toxicity_questions": [],
+    "toxicity_persona_responses": [],
+    "toxicity_raw_rubric": None,
+    "toxicity_examples": None,
+    "toxicity_rubric": None,
+    "toxicity_evaluations": None,
+
+    # LINGUISTIC_HABITS
+    "linguistic_habits_questions": [],
+    "linguistic_habits_persona_responses": [],
+    "linguistic_habits_raw_rubric": None,
+    "linguistic_habits_examples": None,
+    "linguistic_habits_rubric": None,
+    "linguistic_habits_evaluations": None,
+
+    # PERSONA_CONSISTENTCY
+    "persona_consistentcy_questions": [],
+    "persona_consistentcy_persona_responses": [],
+    "persona_consistentcy_raw_rubric": None,
+    "persona_consistentcy_examples": None,
+    "persona_consistentcy_rubric": None,
+    "persona_consistentcy_evaluations": None,
+
+    # ACTION_JUSTIFICATION
+    "action_justification_questions": [],
+    "action_justification_persona_responses": [],
+    "action_justification_raw_rubric": None,
+    "action_justification_examples": None,
+    "action_justification_rubric": None,
+    "action_justification_evaluations": None,
+
+    # Final aggregation
+    "final_aggregation": None
 }
 
 # Create Session Service
@@ -131,9 +92,9 @@ for task in EvaluationTask:
         description=f"Evaluation task workflow for the task {task.value}",
         sub_agents=[
             create_question_agent(task=task),
-            create_persona_agent(name=f"persona_agent_for_{task_name}_eval"),
-            create_rubric_formatter_agent(task=task),   
-            create_evaluator_agent(agent_name=f"evaluator_agent1_for_{task_name}_eval")
+            create_persona_agent(task=task),
+            create_rubric_formatter_agent(task=task),
+            create_evaluator_agent(task=task)
         ]
     )
     evaluation_task_workflows.append(evaluation_task_workflow)
@@ -160,7 +121,7 @@ root_agent = SequentialAgent(
 runner = Runner(
     agent=root_agent,
     app_name=APP_NAME,
-    session_service=session_service
+    session_service=session_service,
 )
 
 def create_agent_card(url: str) -> AgentCard:
