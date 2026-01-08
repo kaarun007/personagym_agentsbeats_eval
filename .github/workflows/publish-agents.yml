@@ -45,22 +45,15 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
-            # ↑ Fixed: Use repository_owner (your username/org) instead of full repository
-            # This makes images: ghcr.io/yourusername/personagym-agent etc.
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr          # Useful if you later add PR triggers
+            # Always tag as 'latest' for any branch push (including feature branches)
+            type=raw,value=latest
+            # For version tags like v1.0.0, also create versioned tags
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-            type=sha,prefix=sha-       # Standard short sha tag
-            type=raw,value=latest,enable={{is_default_branch}}
-            # Optional: branch-prefixed sha (very useful for debugging)
-            # type=sha,prefix={{branch}}-,enable={{is_not_default_branch}}
           flavor: |
             latest=auto
-          # Optional: Add if you want more predictable OCI labels
-          # annotations-levels: manifest,index
 
       - name: Build and push Docker image (${{ matrix.name }})
         uses: docker/build-push-action@v6   # ← Updated to latest v6 (Jan 2026)
