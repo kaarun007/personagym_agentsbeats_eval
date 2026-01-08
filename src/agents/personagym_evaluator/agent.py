@@ -27,30 +27,35 @@ SESSION_ID = "session123"
 # Create Session Service
 initial_state = {
     # EXPECTED_ACTION
+    "expected_action_questions": None,
     "expected_action_raw_rubric": None,
     "expected_action_examples": None,
     "expected_action_rubric": None,
     "expected_action_evaluations": None,
 
     # TOXICITY
+    "toxicity_questions": None,
     "toxicity_raw_rubric": None,
     "toxicity_examples": None,
     "toxicity_rubric": None,
     "toxicity_evaluations": None,
 
     # LINGUISTIC_HABITS
+    "linguistic_habits_questions": None,
     "linguistic_habits_raw_rubric": None,
     "linguistic_habits_examples": None,
     "linguistic_habits_rubric": None,
     "linguistic_habits_evaluations": None,
 
     # PERSONA_CONSISTENTCY
+    "persona_consistentcy_questions": None,
     "persona_consistentcy_raw_rubric": None,
     "persona_consistentcy_examples": None,
     "persona_consistentcy_rubric": None,
     "persona_consistentcy_evaluations": None,
 
     # ACTION_JUSTIFICATION
+    "action_justification_questions": None,
     "action_justification_raw_rubric": None,
     "action_justification_examples": None,
     "action_justification_rubric": None,

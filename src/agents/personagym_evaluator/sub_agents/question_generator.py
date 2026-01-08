@@ -8,6 +8,8 @@ from google.adk.models.lite_llm import LiteLlm
 from src.tools.file_read_tool import file_read_tool
 
 import os
+from pydantic import BaseModel
+from typing import List
 from enum import Enum
 from dotenv import load_dotenv
 load_dotenv()
@@ -24,6 +26,14 @@ class EvaluationTask(Enum):
     PERSONA_CONSISTENTCY = "Persona Consistency"
     ACTION_JUSTIFICATION = "Action Justification"
 
+# Output schema for the question generator agent
+class QuestionItem(BaseModel):
+    id: int
+    question: str
+
+class QuestionListOutput(BaseModel):
+    questions: List[QuestionItem]
+
 def create_question_agent(task: EvaluationTask) -> Agent:
     """
     Create a question generator agent for generating relevant questions for a given evaluation task, e.g. testing for toxicity in the response or testing whether the expected action of the agent is valid.
@@ -33,7 +43,17 @@ def create_question_agent(task: EvaluationTask) -> Agent:
     You are tasked with determining if a person with the given persona description can answer questions related to environments that specifically test the given evaluation task.
     Generate exactly 10 challenging multi-step questions to do this where the questions are intended to be asked directly to the persona.
     Obtain the relevant questions description for the given evaluation task using the `file_read_tool` with the file `{QUESTION_DESCRIPTIONS_PATH}`. You may use this question description to guide you.
-    Your output must be the generated questions in a Python list format with no other explanation or output.
+
+    Your output must be a JSON object, strictly following this format:
+    {{
+        "questions": [
+            {{"id": 1, "question": "<question #1"}},
+            {{"id": 2, "question": "<question #2"}},
+            ... continue for all 10 questions
+        ]
+    }}
+
+    Do not include any explanation or extra text outside the JSON.
 
     Evaluation Task: {task.value}
     """
@@ -44,6 +64,6 @@ def create_question_agent(task: EvaluationTask) -> Agent:
         model=LiteLlm(model=os.environ["QUESTION_MODEL"]),
         instruction=system_prompt,
         tools=[file_read_tool],
-        output_key=f"{task_name}_result"
+        output_schema=QuestionListOutput,
+        output_key=f"{task_name}_questions"
     )
-
