@@ -1,13 +1,12 @@
 name: Publish PersonaGym Agents
 
-# Trigger this workflow when pushing main branch and tags
 on:
   push:
     branches:
       - main
-      - feature/gha  # Temporary: for testing the workflow
+      - feature/gha  # ← Good for testing; remove later if temporary
     tags:
-      - 'v*'  # Trigger on version tags like v1.0.0, v1.1.0
+      - 'v*'
 
 jobs:
   publish:
@@ -16,15 +15,11 @@ jobs:
     strategy:
       matrix:
         include:
-          # PersonaGym AgentsBeats Eval images
           - name: personagym-agent
             dockerfile: Dockerfile.agent
           - name: personagym-evaluator
             dockerfile: Dockerfile.evaluator
 
-    # These permissions are required for the workflow to:
-    # - Read repository contents (checkout code)
-    # - Write to GitHub Container Registry (push Docker images)
     permissions:
       contents: read
       packages: write
@@ -33,55 +28,60 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Optional but recommended: Setup Buildx explicitly (improves caching/reliability)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          # GITHUB_TOKEN is automatically provided by GitHub Actions
-          # No manual secret configuration needed!
-          # It has permissions based on the 'permissions' block above
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}-${{ matrix.name }}
+          images: |
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
+            # ↑ Fixed: Use repository_owner (your username/org) instead of full repository
+            # This makes images: ghcr.io/yourusername/personagym-agent etc.
           tags: |
-            # For tags like v1.0, create tag '1.0'
-            type=semver,pattern={{version}}
-            # For tags like v1.0, create tag '1'
-            type=semver,pattern={{major}}
-            # For main branch, create tag 'latest'
-            type=raw,value=latest,enable={{is_default_branch}}
-            # For feature branches, create tag with branch name
             type=ref,event=branch
-            # For PRs, create tag 'pr-123'
-            type=ref,event=pr
-            # Fallback: use SHA for any push
-            type=sha,prefix={{branch}}-
+            type=ref,event=pr          # Useful if you later add PR triggers
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix=sha-       # Standard short sha tag
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Optional: branch-prefixed sha (very useful for debugging)
+            # type=sha,prefix={{branch}}-,enable={{is_not_default_branch}}
+          flavor: |
+            latest=auto
+          # Optional: Add if you want more predictable OCI labels
+          # annotations-levels: manifest,index
 
       - name: Build and push Docker image (${{ matrix.name }})
-        id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6   # ← Updated to latest v6 (Jan 2026)
         with:
           context: .
           file: ${{ matrix.dockerfile }}
-          # Only push if this is a push event (not a PR)
-          # PRs will build but not push to avoid polluting the registry
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # Explicitly build for linux/amd64 (GitHub Actions default)
           platforms: linux/amd64
+          # Great for speed: GitHub Actions cache backend
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Output image digest
         if: github.event_name != 'pull_request'
         run: |
           echo "## Docker Image Published: ${{ matrix.name }} :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags:** ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
