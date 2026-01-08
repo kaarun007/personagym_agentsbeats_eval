@@ -17,7 +17,7 @@ from personagym_evaluator.sub_agents.evaluator import create_evaluator_agent
 from personagym_evaluator.sub_agents.score_aggregator import create_score_aggregator_agent
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(verbose=False, override=False)
 
 # Session constants
 APP_NAME = "personagym_agentsbeat_eval"
