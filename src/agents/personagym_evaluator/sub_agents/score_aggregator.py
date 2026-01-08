@@ -4,8 +4,9 @@ from google.adk.models.lite_llm import LiteLlm
 import os
 from dotenv import load_dotenv
 # Internal imports
-from src.agents.personagym_evaluator.sub_agents.evaluator import EvaluatorOutput
+# from src.agents.personagym_evaluator.sub_agents.evaluator import EvaluatorOutput
 from src.tools.file_write_tool import file_write_tool
+from src.agents.personagym_evaluator.logging_callbacks import log_state_after_agent, log_prompt_before_llm
 
 load_dotenv()
 
@@ -18,8 +19,9 @@ You will receive raw evaluation texts from multiple agents.
 Your processing algorithm is STRICT and matches the official PersonaGym logic:
 
 1. **Extraction**:
-   - Parse each input Pydantic object to find evaluation segments via the `evaluations` which is an array of ResponseEvaluation objects
-   - Within each array item, extract the `score` field as an integer (1-5)
+   - Read the session state to find evaluation segments for each evaluation task.
+   - Each output is a Pydantic object containing an `evaluations` array of ResponseEvaluation objects containing question, justification and score.
+   - Within each array item, extract the `score` field as an integer (1-5).
 
 2. **Calculation** (Per Task):
    - Collect all scores for the task.
@@ -29,7 +31,7 @@ Your processing algorithm is STRICT and matches the official PersonaGym logic:
    - Calculate the average of all Task Averages.
 
 **Output Report:**
-Produce a Markdown report as per the output report template:
+Produce a Markdown summary report as per the output report template:
 
 # PersonaGym Evaluation Report
 
@@ -45,12 +47,15 @@ Produce a Markdown report as per the output report template:
 """
 
 file_writer_prompt = f"""
-You are an agent responsible for writing a provided Markdown report to an output file at a specified path. You will receive a report as Markdown-formatted text. Use the instructions below to write to a file.
+You are an agent responsible for writing a provided Markdown report to an output file at a specified path. Use the instructions below to write to a file.
 
 **Write Output Report to file:**
 1. Use the `file_write_tool`
 2. Write the FULL output Markdown report to the file path:
    `{RESULTS_TEMPLATE_PATH}`
+
+**Here's the provided report as Markdown-formatted text to write to file**
+{{final_summary_report?}}
 """
 
 def create_score_aggregator_agent() -> SequentialAgent:
@@ -63,15 +68,19 @@ def create_score_aggregator_agent() -> SequentialAgent:
         description="Aggregates scores from multiple evaluation tasks and generates a summary report.",
         model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
         instruction=system_prompt,
-        input_schema=EvaluatorOutput
+        # input_schema=EvaluatorOutput,
+        output_key="final_summary_report",
+        after_agent_callback=log_state_after_agent
     )
 
     file_writer_agent = Agent(
         name="file_writer_agent",
-        description="Writes the output report to a file",
+        description="Writes the output summary report to a file",
         model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
         instruction=file_writer_prompt,
-        tools=[file_write_tool]
+        tools=[file_write_tool],
+        after_agent_callback=log_state_after_agent,
+        before_model_callback=log_prompt_before_llm
     )
 
     return SequentialAgent(
