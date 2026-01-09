@@ -11,7 +11,9 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from google.adk.models.lite_llm import LiteLlm
-load_dotenv()
+
+# Load .env if it exists (for local development), but don't fail if missing (for Docker)
+load_dotenv(verbose=False, override=False)
 
 from google.adk.agents import LlmAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a

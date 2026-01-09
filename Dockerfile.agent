@@ -9,7 +9,6 @@ COPY pyproject.toml uv.lock README.md ./
 # Copy only the necessary files for personagym_agent
 COPY src/agents/__init__.py src/agents/
 COPY src/agents/personagym_agent src/agents/personagym_agent
-COPY src/.env src/
 
 RUN \
     --mount=type=cache,target=/home/agentbeats/.cache/uv,uid=1000 \
@@ -17,6 +16,6 @@ RUN \
 
 COPY scenarios scenarios
 
-ENTRYPOINT ["uv", "run", "--env-file", "src/.env", "src/agents/personagym_agent/agent.py"]
+ENTRYPOINT ["uv", "run", "src/agents/personagym_agent/agent.py"]
 CMD ["--host", "0.0.0.0", "--port", "9020"]
 EXPOSE 9020

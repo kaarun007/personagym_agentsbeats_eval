@@ -9,15 +9,25 @@ from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 import argparse
 import uvicorn
 
-from personagym_evaluator.sub_agents.settings_selector import root_agent as settings_selector_agent
-from personagym_evaluator.sub_agents.question_generator import EvaluationTask, create_question_agent
-from personagym_evaluator.sub_agents.persona_response import create_persona_agent
-from personagym_evaluator.sub_agents.rubric_formatter import create_rubric_formatter_agent
-from personagym_evaluator.sub_agents.evaluator import create_evaluator_agent
-from personagym_evaluator.sub_agents.score_aggregator import create_score_aggregator_agent
+# Try relative imports first (for Docker), fall back to absolute imports (for local uv run)
+try:
+    from .sub_agents.settings_selector import root_agent as settings_selector_agent
+    from .sub_agents.question_generator import EvaluationTask, create_question_agent
+    from .sub_agents.persona_response import create_persona_agent
+    from .sub_agents.rubric_formatter import create_rubric_formatter_agent
+    from .sub_agents.evaluator import create_evaluator_agent
+    from .sub_agents.score_aggregator import create_score_aggregator_agent
+except ImportError:
+    # Fallback for local development with uv run
+    from agents.personagym_evaluator.sub_agents.settings_selector import root_agent as settings_selector_agent
+    from agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask, create_question_agent
+    from agents.personagym_evaluator.sub_agents.persona_response import create_persona_agent
+    from agents.personagym_evaluator.sub_agents.rubric_formatter import create_rubric_formatter_agent
+    from agents.personagym_evaluator.sub_agents.evaluator import create_evaluator_agent
+    from agents.personagym_evaluator.sub_agents.score_aggregator import create_score_aggregator_agent
 
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv(verbose=False, override=False)
 
 # Session constants
 APP_NAME = "personagym_agentsbeat_eval"
