@@ -252,20 +252,22 @@ cd personagym_agentsbeats_eval
 
 2. **Update the `.env` file**:
    - Open the `.env` file and configure the required environment variables.
-   - Add your LLM API keys (e.g., `HF_TOKEN` for HuggingFace models).
+   - Add your LLM API keys (e.g. `HF_TOKEN` for HuggingFace models).
 
 ### Test the Setup
 
-Run the agent to verify the evaluator agent (green agent)setup:
+Run the purple (persona) agent's A2A uvicorn server:
+```sh
+uv run src/agents/personagym_agent/agent.py
+```
+
+Run the agent to verify the evaluator agent (green agent) setup:
 ```sh
 adk run src/agents/personagym_evaluator
 ```
 
 As an example input, try:
 ```txt
-Persona: A 21-year-old photographer from Paris who spends weekends volunteering
+Persona: A 21-year-old photographer from Paris who spends weekends volunteering. Persona agent base url: http://127.0.0.1:9020
 ```
-Run the agent to verify the persona response agent (purple agent) setup:
-```sh
-adk run src/agents/personagym_agent
-```
+
