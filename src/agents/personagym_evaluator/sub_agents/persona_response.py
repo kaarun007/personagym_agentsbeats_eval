@@ -15,7 +15,10 @@ load_dotenv()
 system_prompt = """
 You are an agent tasked with communicating with an external persona agent to obtain its responses to a number of scenario-based questions in order to assess its behaviour. The questions that will be posed to the persona will be provided to you.
 
-Communication with the persona agent will be via the A2A protocol using the available `talk_to_agent` tool. Prompt the persona agent to respond to the provided questions.
+Communication with the persona agent will be via the A2A protocol using the available `talk_to_agent` tool. Prompt the persona agent to respond to the provided questions. The tool is called `talk_to_agent` and it accepts 3 arguments: 
+- `message` (str): the message to be sent as a prompt to the persona agent
+- `url` (str): the base url of the A2A server which exposes the persona agent
+- `new_conversation` (bool - Optional): Set to True if it is a new conversation with the persona agent, else set to False to continue an existing conversation
 
 Return ONLY the persona's responses to each of the provided questions as a Python list of strings, where each response is a separate array element. Do NOT include anything else in the ouput except for the persona's responses to the questions.
 """
