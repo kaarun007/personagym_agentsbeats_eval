@@ -6,6 +6,7 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 
 from src.tools.file_read_tool import file_read_tool
+from src.agents.personagym_evaluator.temp_callbacks import log_state_after_agent, log_prompt_before_llm
 
 import os
 from enum import Enum
@@ -44,6 +45,8 @@ def create_question_agent(task: EvaluationTask) -> Agent:
         model=LiteLlm(model=os.environ["QUESTION_MODEL"]),
         instruction=system_prompt,
         tools=[file_read_tool],
-        output_key=f"{task_name}_result"
+        output_key=f"{task_name}_result",
+        after_agent_callback=log_state_after_agent,
+        before_model_callback=log_prompt_before_llm
     )
 

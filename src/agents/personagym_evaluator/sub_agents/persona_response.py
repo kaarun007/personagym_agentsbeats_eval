@@ -10,6 +10,8 @@ import os
 from dotenv import load_dotenv
 
 from src.tools.message_tool import MessageToolProvider
+from src.agents.personagym_evaluator.temp_callbacks import log_state_after_agent, log_prompt_before_llm
+from google.adk.agents.callback_context import CallbackContext
 load_dotenv()
 
 system_prompt = """
@@ -29,12 +31,18 @@ def create_persona_response_agent(name: str) -> Agent:
     """
     message_tool_provider = MessageToolProvider()
 
+    async def combined_callback(callback_context: CallbackContext):
+        message_tool_provider.reset()
+        await log_state_after_agent(callback_context)
+
     return Agent(
         name=name,
         description="Agent that communicates with the persona agent under evaluation",
         model=LiteLlm(model=os.environ["RESPONSE_MODEL"]),
         instruction=system_prompt,
         tools=[FunctionTool(func=message_tool_provider.talk_to_agent)],
-        after_agent_callback=lambda callback_context: message_tool_provider.reset()
+        # after_agent_callback=lambda callback_context: message_tool_provider.reset(),
+        after_agent_callback=combined_callback,
+        before_model_callback=log_prompt_before_llm
     )
 

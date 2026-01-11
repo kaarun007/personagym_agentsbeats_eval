@@ -9,6 +9,7 @@ from pydantic import BaseModel
 # Internal imports
 from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
 from src.tools.file_read_tool import file_read_tool
+from src.agents.personagym_evaluator.temp_callbacks import log_state_after_agent, log_prompt_before_llm
 
 load_dotenv()
 
@@ -115,7 +116,9 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         description="Agent that extracts the appropriate rubric from a full list of rubrics",
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=rubric_extractor_system_prompt,
-        tools=[file_read_tool]
+        tools=[file_read_tool],
+        after_agent_callback=log_state_after_agent,
+        before_model_callback=log_prompt_before_llm
     )
 
     example_generator_agent = Agent(
@@ -123,7 +126,9 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         description="Agent that generates response examples for each score in the provided rubric",
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=example_generator_system_prompt,
-        output_schema=ExampleGeneratorOutput
+        output_schema=ExampleGeneratorOutput,
+        after_agent_callback=log_state_after_agent,
+        before_model_callback=log_prompt_before_llm
     )
 
     rubric_formatter_agent = Agent(
@@ -131,7 +136,9 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         description="Agent that formats the final rubric and examples to pass on to the evaluator agent",
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=rubric_formatter_system_prompt,
-        output_schema=EvaluationRubric
+        output_schema=EvaluationRubric,
+        after_agent_callback=log_state_after_agent,
+        before_model_callback=log_prompt_before_llm
     )
 
     return SequentialAgent(
