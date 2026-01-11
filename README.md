@@ -264,6 +264,7 @@ adk run src/agents/personagym_evaluator
 As an example input, try:
 ```txt
 Persona: A 21-year-old photographer from Paris who spends weekends volunteering
+Persona: A high school physics teacher
 ```
 Run the agent to verify the persona response agent (purple agent) setup:
 ```sh

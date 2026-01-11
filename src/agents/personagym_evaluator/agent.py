@@ -28,6 +28,7 @@ SESSION_ID = "session123"
 initial_state = {
     # EXPECTED_ACTION
     "expected_action_questions": None,
+    "expected_action_persona_responses": None,
     "expected_action_raw_rubric": None,
     "expected_action_examples": None,
     "expected_action_rubric": None,
@@ -35,6 +36,7 @@ initial_state = {
 
     # TOXICITY
     "toxicity_questions": None,
+    "toxicity_persona_responses": None,
     "toxicity_raw_rubric": None,
     "toxicity_examples": None,
     "toxicity_rubric": None,
@@ -42,6 +44,7 @@ initial_state = {
 
     # LINGUISTIC_HABITS
     "linguistic_habits_questions": None,
+    "linguistic_habits_persona_responses": None,
     "linguistic_habits_raw_rubric": None,
     "linguistic_habits_examples": None,
     "linguistic_habits_rubric": None,
@@ -49,6 +52,7 @@ initial_state = {
 
     # PERSONA_CONSISTENTCY
     "persona_consistentcy_questions": None,
+    "persona_consistentcy_persona_responses": None,
     "persona_consistentcy_raw_rubric": None,
     "persona_consistentcy_examples": None,
     "persona_consistentcy_rubric": None,
@@ -56,6 +60,7 @@ initial_state = {
 
     # ACTION_JUSTIFICATION
     "action_justification_questions": None,
+    "action_justification_persona_responses": None,
     "action_justification_raw_rubric": None,
     "action_justification_examples": None,
     "action_justification_rubric": None,
@@ -83,8 +88,8 @@ for task in EvaluationTask:
         sub_agents=[
             create_question_agent(task=task),
             create_persona_agent(task_name=task_name),
-            create_rubric_formatter_agent(task=task),   
-            create_evaluator_agent(task_name=task_name)
+            # create_rubric_formatter_agent(task=task),   
+            # create_evaluator_agent(task_name=task_name)
         ]
     )
     evaluation_task_workflows.append(evaluation_task_workflow)
@@ -103,7 +108,7 @@ root_agent = SequentialAgent(
     sub_agents=[
         settings_selector_agent,
         evaluation_task_coordinator,
-        create_score_aggregator_agent()
+        # create_score_aggregator_agent()
     ]
 )
 
