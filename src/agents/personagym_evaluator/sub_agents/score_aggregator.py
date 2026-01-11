@@ -19,7 +19,7 @@ You will receive raw evaluation texts from multiple agents.
 Your processing algorithm is STRICT and matches the official PersonaGym logic:
 
 1. **Extraction**:
-   - Read the session state to find evaluation segments for each evaluation task.
+   - Read the provided evaluation segments for each evaluation task.
    - Each output is a Pydantic object containing an `evaluations` array of ResponseEvaluation objects containing question, justification and score.
    - Within each array item, extract the `score` field as an integer (1-5).
 
@@ -29,6 +29,14 @@ Your processing algorithm is STRICT and matches the official PersonaGym logic:
 
 3. **Global Calculation**:
    - Calculate the average of all Task Averages.
+
+**Provided evaluation segments:**
+{expected_action_evaluations?}
+{toxicity_evaluations?}
+{linguistic_habits_evaluations?}
+{persona_consistentcy_evaluations?}
+{action_justification_evaluations?}
+
 
 **Output Report:**
 Produce a Markdown summary report as per the output report template:

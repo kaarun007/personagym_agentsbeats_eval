@@ -15,37 +15,6 @@ load_dotenv()
 ### Evaluator System Prompt
 
 # :TODO how to create system_prompt: You are an ACCURATE, FAITHFUL, CRITICAL and FAIR judge who is tasked to evaluate responses to questions based on a given rubric.
-system_prompt = """
-You are an expert judge for the PersonaGym framework. Your goal is to be ACCURATE, FAITHFUL, CRITICAL, and FAIR.
-
-You are given a rubric to evaluate persona responses below. Each evaluation must be independent.
-Return your evaluations of each response based on the criteria established in the rubric.
-
-You must follow this STRICT Output Format for each question:
-
-Format:
-{
-    evaluation_task: [The evaluation task type e.g. Expected Action]
-    evaluations: [
-        {
-            "question": [Evaluation question #1],
-            "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
-            "score": [Final score based on the rubric (1-5)]
-
-        },
-        {
-            "question": [Evaluation question #2],
-            "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
-            "score": [Final score based on the rubric (1-5)]
-        },
-        {
-            ... continue for all provided questions
-        }
-    ]
-}
-
-Each question evaluation will be a JSON object as defined above with the "question", "justification" and "score" fields. The length of the "evaluations" array should be equal to the total number of question-response pairs.
-"""
 
 ### Result formatter
 
@@ -64,7 +33,40 @@ def create_evaluator_agent(task_name: str) -> Agent:
     """
     Creates an instance of the Evaluator Agent.
     """
+    system_prompt = f"""
+    You are an expert judge for the PersonaGym framework. Your goal is to be ACCURATE, FAITHFUL, CRITICAL, and FAIR.
 
+    You are given a rubric to evaluate persona responses below. Each evaluation must be independent.
+    Return your evaluations of each response based on the criteria established in the rubric.
+
+    You must follow this STRICT Output Format for each question:
+
+    Format:
+    {{
+        evaluation_task: [The evaluation task type e.g. Expected Action]
+        evaluations: [
+            {{
+                "question": [Evaluation question #1],
+                "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
+                "score": [Final score based on the rubric (1-5)]
+
+            }},
+            {{
+                "question": [Evaluation question #2],
+                "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
+                "score": [Final score based on the rubric (1-5)]
+            }},
+            {{
+                ... continue for all provided questions
+            }}
+        ]
+    }}
+
+    Each question evaluation will be a JSON object as defined above with the "question", "justification" and "score" fields. The length of the "evaluations" array should be equal to the total number of question-response pairs.
+
+    **Provided questions and it's responses with rubrics:**
+    {{{task_name}_rubric?}}
+    """
     return Agent(
         name=f"evaluator_agent_for_{task_name}_eval",
         description="Agent that evaluates answers given by a persona agent",

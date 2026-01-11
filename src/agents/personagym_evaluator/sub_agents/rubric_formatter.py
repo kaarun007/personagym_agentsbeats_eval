@@ -21,6 +21,7 @@ class ResponseExample(BaseModel):
     example_response: str
 
 class ExamplesList(BaseModel):
+    id: int
     question: str
     examples: list[ResponseExample]
 
@@ -29,6 +30,7 @@ class ExampleGeneratorOutput(BaseModel):
 
 # Define the final output schema
 class ResponseToEvaluate(BaseModel):
+    id: int
     question: str
     response: str
     examples: list[ResponseExample]
@@ -47,7 +49,7 @@ class EvaluationRubric(BaseModel):
     evaluation_task: EvaluationTask
     scoring_rubric: ScoringRubric
     responses: list[ResponseToEvaluate]
-    
+
 # Define the Rubric Formatter Agent
 def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
     """
@@ -63,41 +65,29 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
     """
 
     # Define the system prompt to be used by the example generator agent
-    example_generator_system_prompt = """
+    example_generator_system_prompt = f"""
     You are an example generator agent. Your role is to read a provided scoring rubric used to evaluate responses from a given persona and generate example responses for each of the possible scores in the rubric for the given persona and question. You will adopt the behaviour of the given persona and provide a response for the given question where the quality of your response is based on the criteria specified in the rubric for that particular score.
 
-    Your output should conform to the following format:
-    {
-        "questions": [<Array of questions and corresponding example responses>]
-    }
-
-    You will populate the "questions" array with your generated example responses for each provided evaluation question, formatting using the JSON schema below:
-    {
-        "question": <Evaluation question>,
-        "examples": [
-            {
-                "score": 1,
-                "example_response": "<Example response for score 1>"
-            },
-            {
-                "score": 2,
-                "example_response": "<Example response for score 2>"
-            },
-            {
-                "score": 3,
-                "example_response": "<Example response for score 3>"
-            },
-            {
-                "score": 4,
-                "example_response": "<Example response for score 4>"
-            },
-            {
-                "score": 5,
-                "example_response": "<Example response for score 5>"
-            }
+    Your output should conform to the following JSON schema format:
+    {{
+        "questions": [
+            {{
+                "id": <Question ID>,
+                "question": "<Evaluation question>",
+                "examples": [
+                    {{"score": 1, "example_response": "<Response for score 1>"}},
+                    {{"score": 2, "example_response": "<Response for score 2>"}},
+                    {{"score": 3, "example_response": "<Response for score 3>"}},
+                    {{"score": 4, "example_response": "<Response for score 4>"}},
+                    {{"score": 5, "example_response": "<Response for score 5>"}}
+                ]
+            }},
+            ... repeat for all provided evaluation questions
         ]
-    }
-    This should be repeated once for each of the provided evaluation questions.
+    }}
+
+    **Provided questions:**
+    {{{task_name}_questions?}}
     """
 
     # Define the system prompt for the Rubric Formatter Agent
@@ -106,30 +96,29 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
 
     Format the rubric as a JSON object with the following schema, filling in the placeholders with appropriate values:
     {{
-        "persona": "<The persona to be evaluated>",
+        "persona": "<The persona being evaluated>",
         "evaluation_task": "{task.value}",
         "scoring_rubric": {{
             "task": "<The evaluation task name>",
             "description": "<Description of the rubric>",
             "criteria": [
-                {{
-                    "score": <numeric score #1>,
-                    "definition": "<Definition for this score #1>"
-                }},
-                {{
-                    ... continue for all provided scores in the rubric
-                }}
+                {{"score": <numeric score #1>, "definition": "<Definition for score #1>"}},
+                ... continue for all provided scores in the rubric
             ]
         }},
-        "responses": [Array of responses to be evaluated, following the JSON object format below]
+        "responses": [
+            {{
+                "id": <Question ID>,
+                "question": "<Evaluation question>",
+                "response": "<Persona response>",
+                "examples": [Array of generated example responses to the evaluation question for each score]
+            }},
+            ... repeat for all provided questions
+        ]
     }}
 
-    For each evaluation question, populate the responses array with a JSON object according to the following schema:
-    {{
-        "question": [The evaluation question],
-        "response": [The response from the persona agent],
-        "examples": [Array of generated example responses to the evaluation question for each score]
-    }}
+    **Provided questions and responses:**
+    {{{task_name}_responses?}}
     """
 
     rubric_extractor_agent = Agent(
