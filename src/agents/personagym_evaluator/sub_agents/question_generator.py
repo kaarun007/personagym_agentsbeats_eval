@@ -6,6 +6,7 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 
 from src.tools.file_read_tool import file_read_tool
+from src.agents.personagym_evaluator.logging_callbacks import log_state_after_agent, log_prompt_before_llm
 
 import os
 from pydantic import BaseModel
@@ -26,13 +27,15 @@ class EvaluationTask(Enum):
     PERSONA_CONSISTENTCY = "Persona Consistency"
     ACTION_JUSTIFICATION = "Action Justification"
 
+NUM_OF_QUESTIONS = 10
+
 # Output schema for the question generator agent
 class QuestionItem(BaseModel):
     id: int
     question: str
 
 class QuestionListOutput(BaseModel):
-    questions: List[QuestionItem]
+    all_questions: List[QuestionItem]
 
 def create_question_agent(task: EvaluationTask) -> Agent:
     """
@@ -41,19 +44,21 @@ def create_question_agent(task: EvaluationTask) -> Agent:
     task_name = task.name.lower()
     system_prompt = f"""
     You are tasked with determining if a person with the given persona description can answer questions related to environments that specifically test the given evaluation task.
-    Generate exactly 10 challenging multi-step questions to do this where the questions are intended to be asked directly to the persona.
+    Generate exactly {NUM_OF_QUESTIONS} challenging multi-step questions to do this where the questions are intended to be asked directly to the persona.
     Obtain the relevant questions description for the given evaluation task using the `file_read_tool` with the file `{QUESTION_DESCRIPTIONS_PATH}`. You may use this question description to guide you.
 
-    Your output must be a JSON object, strictly following this format:
+    **Your output must be a JSON object, strictly following this format:**
     {{
-        "questions": [
+        "all_questions": [
             {{"id": 1, "question": "<question #1"}},
             {{"id": 2, "question": "<question #2"}},
-            ... continue for all 10 questions
+            ... continue for all {NUM_OF_QUESTIONS} questions
         ]
     }}
 
+    **Additional Requirements:**
     Do not include any explanation or extra text outside the JSON.
+    You MUST return exactly {NUM_OF_QUESTIONS} objects in "all_questions".
 
     Evaluation Task: {task.value}
     """
@@ -65,5 +70,7 @@ def create_question_agent(task: EvaluationTask) -> Agent:
         instruction=system_prompt,
         tools=[file_read_tool],
         output_schema=QuestionListOutput,
-        output_key=f"{task_name}_questions"
+        output_key=f"{task_name}_questions",
+        after_agent_callback=log_state_after_agent,
+        before_model_callback=log_prompt_before_llm
     )
