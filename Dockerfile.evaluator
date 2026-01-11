@@ -3,6 +3,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-trixie
 RUN adduser agentbeats
 USER agentbeats
 WORKDIR /home/agentbeats/personagym
+ENV PYTHONPATH="/home/agentbeats/personagym/src:$PYTHONPATH"
 
 COPY pyproject.toml uv.lock README.md ./
 COPY src src
