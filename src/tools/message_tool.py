@@ -20,7 +20,7 @@ from a2a.types import (
     DataPart,
 )
 
-DEFAULT_TIMEOUT = 300
+DEFAULT_TIMEOUT = 600
 
 
 def _create_message(*, role: Role = Role.user, text: str, context_id: str | None = None) -> Message:
