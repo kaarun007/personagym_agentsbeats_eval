@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 # Internal imports
 from src.agents.personagym_evaluator.sub_agents.evaluator import EvaluatorOutput
 from src.tools.file_write_tool import file_write_tool
+from src.utils.logging_callbacks import pre_agent_logging_callback, post_agent_logging_callback
 
 load_dotenv()
 
@@ -63,7 +64,9 @@ def create_score_aggregator_agent() -> SequentialAgent:
         description="Aggregates scores from multiple evaluation tasks and generates a summary report.",
         model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
         instruction=system_prompt,
-        input_schema=EvaluatorOutput
+        input_schema=EvaluatorOutput,
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )
 
     file_writer_agent = Agent(
@@ -71,7 +74,9 @@ def create_score_aggregator_agent() -> SequentialAgent:
         description="Writes the output report to a file",
         model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
         instruction=file_writer_prompt,
-        tools=[file_write_tool]
+        tools=[file_write_tool],
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )
 
     return SequentialAgent(
@@ -79,5 +84,7 @@ def create_score_aggregator_agent() -> SequentialAgent:
         sub_agents=[
             score_aggregator_agent,
             file_writer_agent
-        ]
+        ],
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )

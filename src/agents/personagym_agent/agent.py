@@ -19,7 +19,7 @@ from google.adk.agents import LlmAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 
-
+from src.utils.logging_callbacks import pre_agent_logging_callback, post_agent_logging_callback
 
 def create_agent_card(url: str) -> AgentCard:
     """Create the agent card for the PersonaGym agent."""
@@ -28,7 +28,7 @@ def create_agent_card(url: str) -> AgentCard:
         name="Persona Adoption and Response",
         description="Adopts a specified persona identity and responds to questions while maintaining character consistency for PersonaGym evaluation",
         tags=["benchmark", "personagym", "persona", "evaluation"],
-        examples=[],
+        examples=["An emergency evacuation drill requires all teachers to help direct students out of the building. Detail the pre‑drill preparation you would undertake, the on‑site actions during the drill, and the post‑drill debrief you would conduct with both students and fellow teachers."],
     )
     return AgentCard(
         name="personagym_agent",
@@ -68,6 +68,8 @@ def create_personagym_agent() -> LlmAgent:
         name="personagym_agent",
         description="Persona-adopting agent for PersonaGym behavioral evaluation",
         instruction=SYSTEM_PROMPT,
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )
 
 

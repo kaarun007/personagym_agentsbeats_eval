@@ -8,6 +8,8 @@ from google.adk.runners import Runner
 from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 import argparse
 import uvicorn
+import logging
+import os
 
 # Try relative imports first (for Docker), fall back to absolute imports (for local uv run)
 try:
@@ -26,8 +28,15 @@ except ImportError:
     from agents.personagym_evaluator.sub_agents.evaluator import create_evaluator_agent
     from agents.personagym_evaluator.sub_agents.score_aggregator import create_score_aggregator_agent
 
+from src.utils.logging_callbacks import pre_agent_logging_callback, post_agent_logging_callback
+
 from dotenv import load_dotenv
 load_dotenv(verbose=False, override=False)
+
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # Session constants
 APP_NAME = "personagym_agentsbeat_eval"
@@ -144,7 +153,9 @@ for task in EvaluationTask:
             create_persona_response_agent(name=f"persona_response_agent_for_{task_name}_eval"),
             create_rubric_formatter_agent(task=task),   
             create_evaluator_agent(agent_name=f"evaluator_agent1_for_{task_name}_eval")
-        ]
+        ],
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )
     evaluation_task_workflows.append(evaluation_task_workflow)
 
@@ -152,7 +163,9 @@ for task in EvaluationTask:
 evaluation_task_coordinator = ParallelAgent(
     name="evaluation_task_coordinator",
     description="Agent that coordinates the evaluation of a persona for all possible evaluation tasks in parallel",
-    sub_agents=evaluation_task_workflows
+    sub_agents=evaluation_task_workflows,
+    before_agent_callback=pre_agent_logging_callback,
+    after_agent_callback=post_agent_logging_callback
 )
 
 # Expose the main sequential workflow as the root agent
@@ -163,7 +176,9 @@ root_agent = SequentialAgent(
         settings_selector_agent,
         evaluation_task_coordinator,
         create_score_aggregator_agent()
-    ]
+    ],
+    before_agent_callback=pre_agent_logging_callback,
+    after_agent_callback=post_agent_logging_callback
 )
 
 # Wrap root agent with Runner to integrate session

@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
+from src.utils.logging_callbacks import pre_agent_logging_callback, post_agent_logging_callback
 
 load_dotenv()
 
@@ -68,5 +69,7 @@ def create_evaluator_agent(agent_name: str) -> Agent:
         description="Agent that evaluates answers given by a persona agent",
         model=LiteLlm(model=os.environ["EVAL_1_MODEL"]),
         instruction=system_prompt,
-        output_schema=EvaluatorOutput
+        output_schema=EvaluatorOutput,
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )
