@@ -54,7 +54,7 @@ for task in EvaluationTask:
         sub_agents=[
             create_question_agent(task=task),
             create_persona_response_agent(task_name=task_name),
-            create_rubric_formatter_agent(task=task),   
+            create_rubric_formatter_agent(task=task),
             create_evaluator_agent(task_name=task_name)
         ]
     )
