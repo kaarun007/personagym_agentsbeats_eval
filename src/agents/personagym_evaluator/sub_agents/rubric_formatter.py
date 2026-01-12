@@ -29,6 +29,7 @@ class ExampleGeneratorOutput(BaseModel):
 
 # Define the final output schema
 class ResponseToEvaluate(BaseModel):
+    id: int
     question: str
     response: str
     examples: list[ResponseExample]
@@ -101,9 +102,10 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
 
     For each evaluation question, populate the responses array with a JSON object according to the following schema:
     {{
-        "question": "<The evaluation question>",
-        "response": "<The response from the persona agent>",
-        "examples": [Array of generated example responses to the evaluation question for each score]
+        "id": 1
+        "question": "<The evaluation question #1>",
+        "response": "<The response for question #1 from the persona agent>",
+        "examples": [Array of generated example responses to the evaluation question #1 for each score]
     }}
     """
 
