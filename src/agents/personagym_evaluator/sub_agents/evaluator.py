@@ -59,17 +59,18 @@ class EvaluatorOutput(BaseModel):
     evaluation_task: EvaluationTask
     evaluations: list[ResponseEvaluation] = Field(description="Array of persona response evaluations with scores")
 
-def create_evaluator_agent(agent_name: str) -> Agent:
+def create_evaluator_agent(task_name: str) -> Agent:
     """
     Creates an instance of the Evaluator Agent.
     """
 
     return Agent(
-        name=agent_name,
+        name=f"evaluator_agent1_for_{task_name}_eval",
         description="Agent that evaluates answers given by a persona agent",
         model=LiteLlm(model=os.environ["EVAL_1_MODEL"]),
         instruction=system_prompt,
         output_schema=EvaluatorOutput,
+        output_key=f"{task_name}_evals",
         after_agent_callback=log_state_after_agent,
         before_model_callback=log_prompt_before_llm
     )

@@ -45,7 +45,7 @@ def create_question_agent(task: EvaluationTask) -> Agent:
         model=LiteLlm(model=os.environ["QUESTION_MODEL"]),
         instruction=system_prompt,
         tools=[file_read_tool],
-        output_key=f"{task_name}_result",
+        output_key=f"{task_name}_questions",
         after_agent_callback=log_state_after_agent,
         before_model_callback=log_prompt_before_llm
     )
