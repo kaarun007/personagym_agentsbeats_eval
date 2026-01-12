@@ -3,6 +3,7 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 
 from src.tools.file_read_tool import file_read_tool
+from src.utils.logging_callbacks import pre_agent_logging_callback, post_agent_logging_callback
 
 import os
 from dotenv import load_dotenv
@@ -22,5 +23,7 @@ root_agent = Agent(
     description="Agent that selects appropriate settings/environments in which to evaluate a particular persona",
     model=LiteLlm(model=os.environ["SETTINGS_MODEL"]),
     instruction=system_prompt,
-    tools=[file_read_tool]
+    tools=[file_read_tool],
+    before_agent_callback=pre_agent_logging_callback,
+    after_agent_callback=post_agent_logging_callback
 )

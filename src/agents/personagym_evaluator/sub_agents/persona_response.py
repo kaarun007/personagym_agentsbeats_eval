@@ -3,6 +3,7 @@ Persona Response Agent
 """
 
 from google.adk.agents import Agent
+from google.adk.agents.callback_context import CallbackContext
 from google.adk.tools.function_tool import FunctionTool
 from google.adk.models.lite_llm import LiteLlm
 
@@ -10,6 +11,7 @@ import os
 from dotenv import load_dotenv
 
 from src.tools.message_tool import MessageToolProvider
+from src.utils.logging_callbacks import post_agent_logging_callback, pre_agent_logging_callback
 load_dotenv()
 
 system_prompt = """
@@ -32,12 +34,20 @@ def create_persona_response_agent(name: str) -> Agent:
     """
     message_tool_provider = MessageToolProvider()
 
+    def post_agent_callback(callback_context: CallbackContext) -> None:
+        """
+        Custom callback function for persona response agent
+        """
+        message_tool_provider.reset()
+        post_agent_logging_callback(callback_context)
+
     return Agent(
         name=name,
         description="Agent that communicates with the persona agent under evaluation",
         model=LiteLlm(model=os.environ["RESPONSE_MODEL"]),
         instruction=system_prompt,
         tools=[FunctionTool(func=message_tool_provider.talk_to_agent)],
-        after_agent_callback=lambda callback_context: message_tool_provider.reset()
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_callback
     )
 

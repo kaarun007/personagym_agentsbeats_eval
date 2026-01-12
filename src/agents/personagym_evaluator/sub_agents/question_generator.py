@@ -6,10 +6,12 @@ from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
 
 from src.tools.file_read_tool import file_read_tool
+from src.utils.logging_callbacks import post_agent_logging_callback, pre_agent_logging_callback
 
 import os
 from enum import Enum
 from dotenv import load_dotenv
+
 load_dotenv()
 
 QUESTION_DESCRIPTIONS_PATH = "src/data/tasks.json"
@@ -44,6 +46,8 @@ def create_question_agent(task: EvaluationTask) -> Agent:
         model=LiteLlm(model=os.environ["QUESTION_MODEL"]),
         instruction=system_prompt,
         tools=[file_read_tool],
-        output_key=f"{task_name}_result"
+        output_key=f"{task_name}_result",
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
     )
 
