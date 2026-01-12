@@ -15,8 +15,6 @@ RUN \
     --mount=type=cache,target=/home/agentbeats/.cache/uv,uid=1000 \
     uv sync --locked
 
-COPY scenarios scenarios
-
 ENTRYPOINT ["uv", "run", "src/agents/personagym_agent/agent.py"]
 CMD ["--host", "0.0.0.0", "--port", "9020"]
 EXPOSE 9020
