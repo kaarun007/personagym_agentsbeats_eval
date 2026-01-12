@@ -10,6 +10,7 @@ COPY pyproject.toml uv.lock README.md ./
 # Copy only the necessary files for personagym_agent
 COPY src/agents/__init__.py src/agents/
 COPY src/agents/personagym_agent src/agents/personagym_agent
+COPY src/utils src/utils
 
 RUN \
     --mount=type=cache,target=/home/agentbeats/.cache/uv,uid=1000 \
