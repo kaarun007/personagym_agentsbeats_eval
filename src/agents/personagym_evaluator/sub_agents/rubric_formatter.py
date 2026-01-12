@@ -34,8 +34,6 @@ class ResponseToEvaluate(BaseModel):
     examples: list[ResponseExample]
 
 class EvaluationRubric(BaseModel):
-    persona: str
-    evaluation_task: EvaluationTask
     scoring_rubric: str
     responses: list[ResponseToEvaluate]
     
@@ -97,16 +95,14 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
 
     Format the rubric as a JSON object with the following schema, filling in the placeholders with appropriate values:
     {{
-        "persona": [The persona to be evaluated],
-        "evaluation_task": {task},
-        "scoring_rubric": [The extracted rubric JSON],
+        "scoring_rubric": "<The extracted rubric JSON as a string>",
         "responses": [Array of responses to be evaluated]
     }}
 
     For each evaluation question, populate the responses array with a JSON object according to the following schema:
     {{
-        "question": [The evaluation question],
-        "response": [The response from the persona agent],
+        "question": "<The evaluation question>",
+        "response": "<The response from the persona agent>",
         "examples": [Array of generated example responses to the evaluation question for each score]
     }}
     """
@@ -117,6 +113,7 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=rubric_extractor_system_prompt,
         tools=[file_read_tool],
+        output_key=f"{task_name}_raw_rubric",
         after_agent_callback=log_state_after_agent,
         before_model_callback=log_prompt_before_llm
     )
@@ -127,6 +124,7 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=example_generator_system_prompt,
         output_schema=ExampleGeneratorOutput,
+        output_key=f"{task_name}_response_examples",
         after_agent_callback=log_state_after_agent,
         before_model_callback=log_prompt_before_llm
     )
@@ -137,6 +135,7 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=rubric_formatter_system_prompt,
         output_schema=EvaluationRubric,
+        output_key=f"{task_name}_final_rubric",
         after_agent_callback=log_state_after_agent,
         before_model_callback=log_prompt_before_llm
     )

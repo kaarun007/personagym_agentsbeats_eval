@@ -64,7 +64,6 @@ def create_score_aggregator_agent() -> SequentialAgent:
         description="Aggregates scores from multiple evaluation tasks and generates a summary report.",
         model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
         instruction=system_prompt,
-        input_schema=EvaluatorOutput,
         after_agent_callback=log_state_after_agent,
         before_model_callback=log_prompt_before_llm
     )
