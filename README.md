@@ -266,8 +266,11 @@ Run the agent to verify the evaluator agent (green agent) setup:
 adk run src/agents/personagym_evaluator
 ```
 
-As an example input, try:
+Example inputs to try:
 ```txt
 Persona: A 21-year-old photographer from Paris who spends weekends volunteering. Persona agent base url: http://127.0.0.1:9020
 ```
 
+```txt
+Persona: A high school physics teacher. Persona agent base url: http://127.0.0.1:9020
+```
