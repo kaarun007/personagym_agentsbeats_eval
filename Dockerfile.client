@@ -1,0 +1,8 @@
+FROM ghcr.io/agentbeats/agentbeats-client:v1.0.0
+
+WORKDIR /app
+
+# Override client runner with patched version
+COPY client/client.py src/agentbeats/client.py
+
+ENTRYPOINT ["uv", "run", "src/agentbeats/client_cli.py"]
