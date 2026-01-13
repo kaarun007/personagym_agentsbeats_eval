@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-      - feature/gha  # ← Good for testing; remove later if temporary
+      - feature/gha # ← Good for testing; remove later if temporary
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   publish:
@@ -56,7 +56,8 @@ jobs:
             latest=auto
 
       - name: Build and push Docker image (${{ matrix.name }})
-        uses: docker/build-push-action@v6   # ← Updated to latest v6 (Jan 2026)
+        id: build
+        uses: docker/build-push-action@v6 # ← Updated to latest v6 (Jan 2026)
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -79,3 +80,4 @@ jobs:
           echo "**Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Use this digest in your MANIFEST.json for reproducibility." >> $GITHUB_STEP_SUMMARY
+
