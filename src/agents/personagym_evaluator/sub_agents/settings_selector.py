@@ -24,6 +24,7 @@ root_agent = Agent(
     model=LiteLlm(model=os.environ["SETTINGS_MODEL"]),
     instruction=system_prompt,
     tools=[file_read_tool],
+    output_key="selected_environments",
     before_agent_callback=pre_agent_logging_callback,
     after_agent_callback=post_agent_logging_callback
 )

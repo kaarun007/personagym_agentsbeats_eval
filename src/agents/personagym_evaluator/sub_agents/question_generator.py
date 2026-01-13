@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 QUESTION_DESCRIPTIONS_PATH = "src/data/tasks.json"
+NUM_OF_QUESTIONS = 10
 
 class EvaluationTask(Enum):
     """
@@ -33,7 +34,7 @@ def create_question_agent(task: EvaluationTask) -> Agent:
     task_name = task.name.lower()
     system_prompt = f"""
     You are tasked with determining if a person with the given persona description can answer questions related to environments that specifically test the given evaluation task.
-    Generate exactly 10 challenging multi-step questions to do this where the questions are intended to be asked directly to the persona.
+    Generate exactly {NUM_OF_QUESTIONS} challenging multi-step questions to do this where the questions are intended to be asked directly to the persona.
     Obtain the relevant questions description for the given evaluation task using the `file_read_tool` with the file `{QUESTION_DESCRIPTIONS_PATH}`. You may use this question description to guide you.
     Your output must be the generated questions in a Python list format with no other explanation or output.
 
@@ -46,7 +47,7 @@ def create_question_agent(task: EvaluationTask) -> Agent:
         model=LiteLlm(model=os.environ["QUESTION_MODEL"]),
         instruction=system_prompt,
         tools=[file_read_tool],
-        output_key=f"{task_name}_result",
+        output_key=f"{task_name}_questions",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
     )
