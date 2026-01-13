@@ -20,7 +20,7 @@ Your processing algorithm is STRICT and matches the official PersonaGym logic:
 
 1. **Extraction**:
    - Read the provided evaluation segments for each evaluation task.
-   - Each output is contains an `evaluations` array of ResponseEvaluation objects containing id, question, justification and score.
+   - Each output contains an `evaluations` array of ResponseEvaluation objects containing id, question, justification and score.
    - There should be {NUM_OF_QUESTIONS} questions with evaluations to extract scores for
    - Within each array item, extract the `score` field as an integer (1-5).
 
