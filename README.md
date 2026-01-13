@@ -86,11 +86,15 @@ graph TB
         AB --> P[Comparison Reports]
     end
 
-    style A fill:#fff4e1
-    style PA fill:#e1ffe1
+    style PA fill:#e1d5ff
+    style PAL fill:#e1d5ff
+    style A fill:#d5ffd5
+    style AB fill:#ffd5b3
+    style N fill:#ffd5b3
+    style O fill:#ffd5b3
+    style P fill:#ffd5b3
     style PC fill:#e1f5ff
     style FT fill:#f0e1ff
-    style AB fill:#ffe1e1
     style SA fill:#ffe1f5
 ```
 
