@@ -26,12 +26,12 @@ The code evaluates "personas" (simulated characters) by placing them in specific
 ```mermaid
 graph TB
     subgraph "Agent Under Evaluation"
-        PA[PersonaGym Agent<br/>A2A Exposed]
+        PA[PersonaGym Agent - Purple Agent<br/>A2A Exposed]
         PA --> |Adopts Persona| PAL[LLM Model]
     end
 
     subgraph "A2A Exposed Coordinator"
-        A[PersonaGym Evaluator<br/>Coordinator Agent<br/>Google ADK]
+        A[PersonaGym Evaluator - Green Agent<br/>Coordinator Agent<br/>Google ADK]
     end
 
     subgraph "File Reading Tools"
