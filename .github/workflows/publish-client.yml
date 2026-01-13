@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/custom-client
     paths:
       - "client/**"
       - "Dockerfile.client"
@@ -49,7 +48,7 @@ jobs:
           flavor: |
             latest=auto
 
-      - name: Build and push Docker image (${{ matrix.name }})
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6 # ← Updated to latest v6 (Jan 2026)
         with:
           context: .
