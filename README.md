@@ -7,7 +7,7 @@ Here is the explanation of the code sequence in PersonaGym, starting from run.py
 ### High-Level Overview:
 The code evaluates "personas" (simulated characters) by placing them in specific settings, asking them challenging questions, and then grading their responses using LLM-based judges against defined rubrics.
 
-### Detailed Steps: 
+### Detailed Steps:
 1. Entry Point (run.py): The script parses arguments and iterates through the list of personas to be evaluated.
 2. Context Generation:
       - Select Settings: An LLM selects relevant scenarios (e.g., "Wedding", "Courtroom") for the persona.
@@ -25,126 +25,196 @@ The code evaluates "personas" (simulated characters) by placing them in specific
 ## High-Level Design
 ```mermaid
 graph TB
-    subgraph "A2A Exposed Agent"
-        A[PersonaGym Coordinator Agent<br/>Google ADK]
-        A --> C[Load Personas Configuration]
-        C --> D[Serial Workflow Orchestration]
+    subgraph "Agent Under Evaluation"
+        PA[PersonaGym Agent<br/>A2A Exposed]
+        PA --> |Adopts Persona| PAL[LLM Model]
     end
-    
+
+    subgraph "A2A Exposed Coordinator"
+        A[PersonaGym Evaluator<br/>Coordinator Agent<br/>Google ADK]
+    end
+
     subgraph "File Reading Tools"
-        FT[File Read Tool] --> |Settings| E1[settings.json]
-        FT --> |Tasks| E2[tasks.json]
-        FT --> |Rubrics| E3[rubrics_template.json]
+        FT[File Read Tool]
+        E1[settings.json]
+        E2[tasks.json]
+        E3[rubrics_template.json]
     end
-    
-    subgraph "Google ADK Serial Workflow"
-        D --> E[Settings Selector Agent]
-        E --> |Uses File Tool| FT
-        E --> F[Question Generator Agent]
-        F --> |Uses File Tool| FT
-        F --> G[Persona Response Agent]
-        G --> H[Rubric Formatter Agent]
-        H --> |Uses File Tool| FT
-        H --> I[Evaluator Agent 1]
-        H --> J[Evaluator Agent 2]
-        I --> K[Score Aggregator Agent]
-        J --> K
-        K --> L[Results Storage Agent]
+
+    subgraph "Google ADK Hybrid Workflow"
+        A --> SS[Settings Selector Agent]
+        SS --> |Uses File Tool| FT
+        FT --> |Settings| E1
+        FT --> |Tasks| E2
+        FT --> |Rubrics| E3
+
+        SS --> PC[Parallel Coordinator Agent]
+
+        PC --> T1[Task 1: Expected Action Workflow]
+        PC --> T2[Task 2: Toxicity Workflow]
+        PC --> T3[Task 3: Linguistic Habits Workflow]
+        PC --> T4[Task 4: Persona Consistency Workflow]
+        PC --> T5[Task 5: Action Justification Workflow]
+
+        T1 --> QG1[Question Generator]
+        QG1 --> PR1[Persona Response Agent]
+        PR1 --> |A2A Protocol| PA
+        PR1 --> RF1[Rubric Formatter<br/>3-stage Sequential]
+        RF1 --> EV1[Evaluator Agent]
+
+        T2 --> QG2[Question Generator]
+        T3 --> QG3[Question Generator]
+        T4 --> QG4[Question Generator]
+        T5 --> QG5[Question Generator]
+
+        EV1 --> SA[Score Aggregator Agent<br/>3-stage Sequential]
+        T2 --> SA
+        T3 --> SA
+        T4 --> SA
+        T5 --> SA
+
+        SA --> FW[File Writer]
+        FW --> JSON[JSON Output]
     end
-    
+
     subgraph "AgentBeats Platform Integration"
-        A --> |A2A Protocol| M[AgentBeats Platform]
-        L --> |Metrics & Scores| M
-        M --> N[Evaluation Dashboard]
-        M --> O[Performance Analytics]
-        M --> P[Comparison Reports]
+        AB[AgentBeats Platform<br/>A2A Client]
+        AB --> |A2A Protocol| A
+        JSON --> |Results| AB
+        AB --> N[Evaluation Dashboard]
+        AB --> O[Performance Analytics]
+        AB --> P[Comparison Reports]
     end
-    
+
     style A fill:#fff4e1
-    style D fill:#e1f5ff
+    style PA fill:#e1ffe1
+    style PC fill:#e1f5ff
     style FT fill:#f0e1ff
-    style M fill:#ffe1e1
-    style K fill:#e1ffe1
+    style AB fill:#ffe1e1
+    style SA fill:#ffe1f5
 ```
 
 ## Component Descriptions
 
-### A2A Exposed Agent
-- **PersonaGym Coordinator Agent**: Main agent exposed via A2A protocol, handles all orchestration
-  - Parses input parameters (personas, evaluation configs)
-  - Loads persona configurations
-  - Manages the serial workflow execution
-  - Exposes agent card for AgentBeats integration
+### Agent Under Evaluation (Purple Agent)
+- **PersonaGym Agent**: Simple LLM agent that adopts a given persona and responds to questions
+  - Exposed via A2A protocol at a configurable endpoint (default: http://127.0.0.1:9020)
+  - Uses `LiteLlm` model configured via `PERSONAGYM_MODEL` environment variable
+  - Receives persona description and maintains character consistency across responses
+  - Evaluated on 5 dimensions: Expected Action, Toxicity, Linguistic Habits, Persona Consistency, and Action Justification
+  - Exposes agent card with "persona_adoption" skill for discoverability
+
+### A2A Exposed Coordinator (Green Agent)
+- **PersonaGym Evaluator**: Orchestrator agent that coordinates the entire evaluation workflow
+  - Exposed via A2A protocol (default: http://127.0.0.1:8001)
+  - Accepts persona description as input and returns comprehensive evaluation JSON
+  - Uses Google ADK's `SequentialAgent` and `ParallelAgent` for hybrid workflow orchestration
+  - Manages session state for tracking evaluations across all tasks
+  - Exposes agent card with "evaluate_persona" skill
 
 ### File Reading Tools
-- **File Read Tool**: Shared tool accessible by all agents in the workflow
-  - **settings.json**: Scenario configurations (Wedding, Courtroom, etc.)
-  - **tasks.json**: Task definitions and attribute mappings
-  - **rubrics_template.json**: Evaluation rubric templates
+- **File Read Tool**: LangChain-based tool accessible by all agents in the workflow
+  - **settings.json**: Environment/scenario configurations (Wedding, Courtroom, School, etc.)
+  - **tasks.json**: Evaluation task definitions for 5 assessment dimensions
+  - **rubrics_template.json**: Scoring rubric templates (1-5 scale) for each task type
+- **File Write Tool**: Writes evaluation results to output files
 
-### Google ADK Serial Workflow
-Sequential execution of specialized agents:
+### Google ADK Hybrid Workflow
+The workflow combines sequential and parallel execution patterns:
 
-1. **Settings Selector Agent**: Selects relevant scenarios using file tool
-2. **Question Generator Agent**: Generates questions using task definitions from file tool
-3. **Persona Response Agent**: Invokes target model to respond as persona
-4. **Rubric Formatter Agent**: Formats grading prompts using rubric templates from file tool
-5. **Evaluator Agent 1 & 2**: Independent evaluators scoring responses
-6. **Score Aggregator Agent**: Averages and combines scores
-7. **Results Storage Agent**: Persists results and prepares metrics
+1. **Settings Selector Agent**: Selects relevant scenarios/environments using file tool
+   - Uses `SETTINGS_MODEL` to analyze persona and choose appropriate contexts
+
+2. **Parallel Coordinator Agent**: Executes 5 evaluation task workflows concurrently
+   - Each task workflow runs as a `SequentialAgent` with specialized sub-agents
+   - Tasks: Expected Action, Toxicity, Linguistic Habits, Persona Consistency, Action Justification
+
+3. **Per-Task Sequential Workflow**:
+   - **Question Generator Agent**: Generates 10 challenging questions per task using file tool
+   - **Persona Response Agent**: Communicates with PersonaGym Agent via A2A to collect responses
+     - Uses `talk_to_agent` tool with A2A protocol
+     - Manages conversation context across multiple questions
+   - **Rubric Formatter Agent** (3-stage sequential):
+     - **Rubric Extractor**: Extracts appropriate rubric from templates
+     - **Example Generator**: Generates example responses for each score (1-5)
+     - **Rubric Formatter**: Formats complete evaluation rubric with examples
+   - **Evaluator Agent**: Scores responses against rubric (uses `EVAL_1_MODEL`)
+
+4. **Score Aggregator Agent** (3-stage sequential):
+   - **Score Aggregator**: Calculates averages per task and overall PersonaScore
+   - **File Writer**: Writes Markdown report to `output/results.md`
+   - **JSON Output**: Returns structured JSON with scores and analysis
 
 ### AgentBeats Platform Integration
-- **A2A Protocol**: Standard communication protocol for agent integration
-- **Evaluation Dashboard**: Real-time visualization of PersonaScores
-- **Performance Analytics**: Trend analysis and comparative metrics
-- **Comparison Reports**: Multi-persona evaluation reports
+- **A2A Protocol**: Standard agent-to-agent communication enabling:
+  - Client-to-Evaluator communication for triggering evaluations
+  - Evaluator-to-PersonaGym Agent communication for response collection
+- **Agent Discovery**: Agent cards expose capabilities, skills, and examples
+- **Evaluation Dashboard**: Real-time visualization of PersonaScores and task breakdowns
+- **Performance Analytics**: Trend analysis and comparative metrics across evaluations
+- **Comparison Reports**: Multi-persona evaluation reports with detailed justifications
 
 ## Agent Communication Flow
 ```mermaid
 sequenceDiagram
-    participant AB as AgentBeats Platform
-    participant CA as Coordinator Agent (A2A)
+    participant Client as AgentBeats Client
+    participant Eval as PersonaGym Evaluator<br/>(Green Agent)
     participant FT as File Read Tool
-    participant WF as Serial Workflow
-    participant Agents as Workflow Agents
+    participant PA as PersonaGym Agent<br/>(Purple Agent)
 
-    AB->>CA: Send evaluation request<br/>(personas, config)
-    CA->>CA: Parse input parameters
-    CA->>CA: Load persona configs
-    CA->>WF: Initialize serial workflow
-    
-    loop For each persona
-        WF->>Agents: Execute Settings Selector
-        Agents->>FT: Read settings.json
-        FT->>Agents: Return settings data
-        
-        WF->>Agents: Execute Question Generator
-        Agents->>FT: Read tasks.json
-        FT->>Agents: Return task definitions
-        
-        WF->>Agents: Execute Persona Response
-        Agents->>Agents: Generate response
-        
-        WF->>Agents: Execute Rubric Formatter
-        Agents->>FT: Read rubrics_template.json
-        FT->>Agents: Return rubric templates
-        
-        par Parallel Evaluation
-            WF->>Agents: Execute Evaluator 1
-            WF->>Agents: Execute Evaluator 2
+    Client->>Eval: A2A: Evaluate persona<br/>(persona description)
+
+    Eval->>Eval: Initialize session & workflow
+    Eval->>FT: Read settings.json
+    FT-->>Eval: Environment options
+    Eval->>Eval: Settings Selector: Choose relevant environments
+
+    Note over Eval: Start Parallel Task Coordinator
+
+    par Expected Action Task
+        Eval->>FT: Read tasks.json (Expected Action)
+        FT-->>Eval: Task definition
+        Eval->>Eval: Generate 10 questions
+        loop 10 questions
+            Eval->>PA: A2A: Send question as persona
+            PA->>PA: Adopt persona & respond
+            PA-->>Eval: A2A: Response
         end
-        
-        WF->>Agents: Execute Score Aggregator
-        WF->>Agents: Execute Results Storage
+        Eval->>FT: Read rubrics_template.json
+        FT-->>Eval: Rubric template
+        Eval->>Eval: Format rubric + generate examples
+        Eval->>Eval: Evaluator: Score responses (1-5)
+    and Toxicity Task
+        Eval->>FT: Read tasks.json (Toxicity)
+        Eval->>Eval: Generate 10 questions
+        loop 10 questions
+            Eval->>PA: A2A: Send question
+            PA-->>Eval: A2A: Response
+        end
+        Eval->>FT: Read rubrics_template.json
+        Eval->>Eval: Format rubric + evaluate
+    and Linguistic Habits Task
+        Eval->>Eval: Similar flow...
+    and Persona Consistency Task
+        Eval->>Eval: Similar flow...
+    and Action Justification Task
+        Eval->>Eval: Similar flow...
     end
-    
-    CA->>AB: Return PersonaScore results
-    AB->>AB: Update dashboard & metrics
+
+    Note over Eval: All task evaluations complete
+
+    Eval->>Eval: Score Aggregator: Calculate averages
+    Eval->>Eval: Generate Markdown report
+    Eval->>Eval: Write to output/results.md
+    Eval->>Eval: Format JSON output
+
+    Eval-->>Client: A2A: Final JSON results<br/>(overall_score, task_scores, summary)
+    Client->>Client: Update dashboard & analytics
 ```
 
 ## Implementation Structure
 ```
-personagym_agentsbeats_eval/       
+personagym_agentsbeats_eval/
 ├── scenarios
 │   └── scenario.toml
 ├── src
@@ -187,12 +257,50 @@ personagym_agentsbeats_eval/
 
 ## Key Design Principles
 
-1. **A2A Integration**: Entire workflow exposed as single A2A agent for AgentBeats
-2. **Serial Workflow**: Using Google ADK's serial workflow pattern for sequential execution
-3. **Shared File Tool**: All agents access configuration files via common file read tool
-4. **Self-Contained**: Coordinator agent handles all parameter parsing and persona loading
-5. **AgentBeats Native**: Direct integration for metrics tracking and visualization
-6. **Stateless Execution**: Each workflow run is independent and reproducible
+1. **Two-Agent Architecture**:
+   - **PersonaGym Agent** (Purple): The agent under evaluation that adopts personas
+   - **PersonaGym Evaluator** (Green): The coordinator that orchestrates evaluation workflow
+   - Both exposed via A2A protocol for seamless integration
+
+2. **Hybrid Workflow Pattern**:
+   - Uses Google ADK's `SequentialAgent` for ordered operations
+   - Uses `ParallelAgent` for concurrent task evaluation (5 tasks run simultaneously)
+   - Nested workflows: Sequential tasks within parallel task coordinator
+
+3. **A2A-Based Agent Communication**:
+   - Evaluator agent communicates with PersonaGym agent via A2A protocol
+   - Enables cross-network agent evaluation and distributed deployments
+   - Standardized agent discovery through agent cards
+
+4. **Shared Tool Architecture**:
+   - All sub-agents access configuration files via common `file_read_tool`
+   - LangChain-based file tools for robust file operations
+   - Centralized data management (settings, tasks, rubrics)
+
+5. **Multi-Stage Processing**:
+   - Rubric Formatter: 3-stage sequential (extract → generate examples → format)
+   - Score Aggregator: 3-stage sequential (aggregate → write file → output JSON)
+   - Enables specialized processing with clear separation of concerns
+
+6. **LiteLlm Integration**:
+   - Model-agnostic through LiteLlm wrapper
+   - Configurable models per agent type via environment variables
+   - Supports multiple LLM providers (OpenAI, Anthropic, HuggingFace, etc.)
+
+7. **Structured Output Schemas**:
+   - Pydantic models enforce type safety and output consistency
+   - Evaluator returns `EvaluatorOutput` with typed evaluations
+   - Final output follows `FinalOutput` schema with scores and analysis
+
+8. **Session State Management**:
+   - InMemorySessionService tracks evaluation state
+   - Maintains persona data, responses, rubrics, and scores across workflow
+   - Enables resumable and traceable evaluations
+
+9. **AgentBeats Native Integration**:
+   - Direct A2A protocol support for seamless platform integration
+   - Structured JSON output format for dashboard consumption
+   - Comprehensive metrics: overall score, per-task breakdowns, justifications
 
 ## Project Setup
 
@@ -252,20 +360,21 @@ cd personagym_agentsbeats_eval
 
 2. **Update the `.env` file**:
    - Open the `.env` file and configure the required environment variables.
-   - Add your LLM API keys (e.g., `HF_TOKEN` for HuggingFace models).
+   - Add your LLM API keys (e.g. `HF_TOKEN` for HuggingFace models).
 
 ### Test the Setup
 
-Run the agent to verify the evaluator agent (green agent)setup:
+Run the purple (persona) agent's A2A uvicorn server:
+```sh
+uv run src/agents/personagym_agent/agent.py
+```
+
+Run the agent to verify the evaluator agent (green agent) setup:
 ```sh
 adk run src/agents/personagym_evaluator
 ```
 
 As an example input, try:
 ```txt
-Persona: A 21-year-old photographer from Paris who spends weekends volunteering
-```
-Run the agent to verify the persona response agent (purple agent) setup:
-```sh
-adk run src/agents/personagym_agent
+Persona: A 21-year-old photographer from Paris who spends weekends volunteering. Persona agent base url: http://127.0.0.1:9020
 ```
