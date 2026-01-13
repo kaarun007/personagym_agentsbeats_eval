@@ -45,8 +45,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
-        flavor: |
-          latest=auto
+          flavor: |
+            latest=auto
 
       - name: Build and push Docker image (${{ matrix.name }})
         uses: docker/build-push-action@v6 # ← Updated to latest v6 (Jan 2026)
