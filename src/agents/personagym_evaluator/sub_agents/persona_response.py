@@ -28,7 +28,7 @@ Communication with the `PersonaGymAgent` will be via the A2A protocol using the 
 Return ONLY the persona's responses to each of the provided questions as a Python list of strings, where each response is a separate array element. Do NOT include anything else in the ouput except for the persona's responses to the questions.
 """
 
-def create_persona_response_agent(name: str) -> Agent:
+def create_persona_response_agent(task_name: str) -> Agent:
     """
     Creates an instance of the persona response agent
     """
@@ -42,7 +42,7 @@ def create_persona_response_agent(name: str) -> Agent:
         post_agent_logging_callback(callback_context)
 
     return Agent(
-        name=name,
+        name=f"persona_response_agent_for_{task_name}_eval",
         description="Agent that communicates with the persona agent under evaluation",
         model=LiteLlm(model=os.environ["RESPONSE_MODEL"]),
         instruction=system_prompt,
