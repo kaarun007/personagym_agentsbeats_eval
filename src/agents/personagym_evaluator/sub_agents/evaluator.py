@@ -6,45 +6,12 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask
+from src.agents.personagym_evaluator.sub_agents.question_generator import EvaluationTask, NUM_OF_QUESTIONS
 from src.utils.logging_callbacks import pre_agent_logging_callback, post_agent_logging_callback
 
 load_dotenv()
 
 ### Evaluator System Prompt
-
-# :TODO how to create system_prompt: You are an ACCURATE, FAITHFUL, CRITICAL and FAIR judge who is tasked to evaluate responses to questions based on a given rubric.
-system_prompt = """
-You are an expert judge for the PersonaGym framework. Your goal is to be ACCURATE, FAITHFUL, CRITICAL, and FAIR.
-
-You are given a rubric to evaluate persona responses below. Each evaluation must be independent.
-Return your evaluations of each response based on the criteria established in the rubric.
-
-You must follow this STRICT Output Format for each question:
-
-Format:
-{
-    evaluation_task: [The evaluation task type e.g. Expected Action]
-    evaluations: [
-        {
-            "question": [Evaluation question #1],
-            "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
-            "score": [Final score based on the rubric (1-5)]
-
-        },
-        {
-            "question": [Evaluation question #2],
-            "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
-            "score": [Final score based on the rubric (1-5)]
-        },
-        {
-            ... continue for all provided questions
-        }
-    ]
-}
-
-Each question evaluation will be a JSON object as defined above with the "question", "justification" and "score" fields. The length of the "evaluations" array should be equal to the total number of question-response pairs.
-"""
 
 ### Result formatter
 
@@ -64,13 +31,48 @@ def create_evaluator_agent(task_name: str) -> Agent:
     Creates an instance of the Evaluator Agent.
     """
 
+    system_prompt = f"""
+    You are an expert judge for the PersonaGym framework. Your goal is to be ACCURATE, FAITHFUL, CRITICAL, and FAIR.
+
+    You are given a rubric to evaluate persona responses below. Each evaluation must be independent.
+    Return your evaluations for each of the {NUM_OF_QUESTIONS} responses based on the criteria established in the rubric.
+
+    You must follow this STRICT Output Format for each of the {NUM_OF_QUESTIONS} questions and corresponding persona responses.
+
+    Format:
+    {{
+        evaluation_task: [The evaluation task type e.g. Expected Action]
+        evaluations: [
+            {{
+                "question": [Evaluation question #1],
+                "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
+                "score": [Final score based on the rubric (1-5)]
+            }},
+            {{
+                "question": [Evaluation question #2],
+                "justification": [Evaluation of the persona's response to the question with detailed reasoning matching the rubric criteria],
+                "score": [Final score based on the rubric (1-5)]
+            }},
+            {{
+                ... continue for all provided questions
+            }}
+        ]
+    }}
+
+    Each question evaluation will be a JSON object as defined above with the "question", "justification" and "score" fields. The length of the "evaluations" array should be equal to the total number of question-response pairs.
+
+    **Provided rubric with the {NUM_OF_QUESTIONS} questions and corresponding persona responses to evaluate:**
+    {{{task_name}_formatted_rubric?}}
+    Found in the state object named `{task_name}_formatted_rubric` or in previous agents responses.
+    """
+
     return Agent(
         name=f"evaluator_agent1_for_{task_name}_eval",
         description="Agent that evaluates answers given by a persona agent",
         model=LiteLlm(model=os.environ["EVAL_1_MODEL"]),
         instruction=system_prompt,
         # output_schema=EvaluatorOutput,
-        output_key=f"{task_name}_evaluation",
+        output_key=f"{task_name}_evaluations",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
     )
