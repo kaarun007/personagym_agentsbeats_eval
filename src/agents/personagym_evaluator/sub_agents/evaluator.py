@@ -69,7 +69,8 @@ def create_evaluator_agent(task_name: str) -> Agent:
         description="Agent that evaluates answers given by a persona agent",
         model=LiteLlm(model=os.environ["EVAL_1_MODEL"]),
         instruction=system_prompt,
-        output_schema=EvaluatorOutput,
+        # output_schema=EvaluatorOutput,
+        output_key=f"{task_name}_evaluation",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
     )

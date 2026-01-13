@@ -47,6 +47,7 @@ def create_persona_response_agent(task_name: str) -> Agent:
         model=LiteLlm(model=os.environ["RESPONSE_MODEL"]),
         instruction=system_prompt,
         tools=[FunctionTool(func=message_tool_provider.talk_to_agent)],
+        output_key=f"{task_name}_persona_responses",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_callback
     )

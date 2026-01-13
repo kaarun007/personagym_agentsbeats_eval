@@ -117,6 +117,7 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=rubric_extractor_system_prompt,
         tools=[file_read_tool],
+        output_key=f"{task_name}_raw_rubric",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
     )
@@ -126,7 +127,8 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         description="Agent that generates response examples for each score in the provided rubric",
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=example_generator_system_prompt,
-        output_schema=ExampleGeneratorOutput,
+        # output_schema=ExampleGeneratorOutput,
+        output_key=f"{task_name}_response_examples",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
     )
@@ -136,7 +138,8 @@ def create_rubric_formatter_agent(task: EvaluationTask) -> SequentialAgent:
         description="Agent that formats the final rubric and examples to pass on to the evaluator agent",
         model=LiteLlm(model=os.environ["RUBRIC_MODEL"]),
         instruction=rubric_formatter_system_prompt,
-        output_schema=EvaluationRubric,
+        # output_schema=EvaluationRubric,
+        output_key=f"{task_name}_formatted_rubric",
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
     )
