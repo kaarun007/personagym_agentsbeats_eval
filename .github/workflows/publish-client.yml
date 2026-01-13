@@ -1,24 +1,17 @@
-name: Publish PersonaGym Agents
+name: Publish Patched AgentBeats client
 
 on:
   push:
     branches:
       - main
-      - feature/gha # ← Good for testing; remove later if temporary
-    tags:
-      - "v*"
+    paths:
+      - "client/**"
+      - "Dockerfile.client"
+      - ".github/workflows/publish-client.yml"
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        include:
-          - name: personagym-agent
-            dockerfile: Dockerfile.agent
-          - name: personagym-evaluator
-            dockerfile: Dockerfile.evaluator
 
     permissions:
       contents: read
@@ -44,7 +37,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/${{ matrix.name }}
+            ghcr.io/${{ github.repository_owner }}/agentbeats-client
           tags: |
             # Always tag as 'latest' for any branch push (including feature branches)
             type=raw,value=latest
@@ -55,12 +48,12 @@ jobs:
           flavor: |
             latest=auto
 
-      - name: Build and push Docker image (${{ matrix.name }})
+      - name: Build and push Docker image
         id: build
         uses: docker/build-push-action@v6 # ← Updated to latest v6 (Jan 2026)
         with:
           context: .
-          file: ${{ matrix.dockerfile }}
+          file: "Dockerfile.client"
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -72,7 +65,7 @@ jobs:
       - name: Output image digest
         if: github.event_name != 'pull_request'
         run: |
-          echo "## Docker Image Published: ${{ matrix.name }} :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "## Docker Image Published: agentbeats-client :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' >> $GITHUB_STEP_SUMMARY
@@ -80,4 +73,3 @@ jobs:
           echo "**Digest:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Use this digest in your MANIFEST.json for reproducibility." >> $GITHUB_STEP_SUMMARY
-
