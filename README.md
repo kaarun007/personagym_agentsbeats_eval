@@ -95,7 +95,7 @@ graph TB
     style P fill:#ffd5b3
     style PC fill:#e1f5ff
     style FT fill:#f0e1ff
-    style SA fill:#ffe1f5
+    style SA fill:#d5ffd5
 ```
 
 ## Component Descriptions
