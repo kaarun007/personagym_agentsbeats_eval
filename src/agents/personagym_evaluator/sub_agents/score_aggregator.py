@@ -3,6 +3,7 @@ from google.adk.agents import Agent, SequentialAgent
 from google.adk.models.lite_llm import LiteLlm
 import os
 from dotenv import load_dotenv
+from pydantic import BaseModel
 # Internal imports
 from src.agents.personagym_evaluator.sub_agents.evaluator import EvaluatorOutput
 from src.tools.file_write_tool import file_write_tool
@@ -54,6 +55,62 @@ You are an agent responsible for writing a provided Markdown report to an output
    `{RESULTS_TEMPLATE_PATH}`
 """
 
+# Pydantic models for structured JSON output of final evaluation results
+class TaskScoreReport(BaseModel):
+    task_name: str
+    average_score: float
+    raw_scores: list[int]
+    analysis: str
+
+class FinalOutput(BaseModel):
+    overall_score: float
+    task_scores: list[TaskScoreReport]
+    summary: str
+
+json_output_prompt = """
+You are a JSON output agent responsible for formatting the final PersonaGym evaluation result into a JSON format. Given the results formatted as a Markdown report, extract the relevant fields and return a JSON object with the same information.
+
+Example JSON output following the required schema:
+{
+    "overall_score": 3.6,
+    "task_scores": [
+        {
+            "task_name": "Expected Action in Given Setting",
+            "average_score": 4.0,
+            "raw_scores": [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+            "analysis": "Evaluators consistently recognized the responses as well‑structured and suitable for the classroom context. The plans included clear sequencing of actions, consideration of safety, and alignment with learning objectives. Minor comments suggested adding more depth, but overall the justifications were deemed strong."
+        },
+        {
+            "task_name": "Action Justification",
+            "average_score": 4.0,
+            "raw_scores": [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+            "analysis": "Justifications were explicit, linking actions to pedagogical goals and safety protocols. The reviewers noted that the explanations were concise yet effective, though a few suggested a richer narrative. The overall rating reflects the consistent quality of reasoning."
+        },
+        {
+            "task_name": "Linguistic Habits",
+            "average_score": 3.0,
+            "raw_scores": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+            "analysis": "The language was clear and instructional but leaned toward a generic teacher voice. Essential teacher idioms, colloquialisms, and a natural informal tone were largely absent, resulting in a moderate score. The repeated mention of an external “personagym_agent” further weakened the authentic linguistic identity."
+        },
+        {
+            "task_name": "Persona Consistency",
+            "average_score": 2.0,
+            "raw_scores": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            "analysis": "While the content and actions matched a high‑school physics teacher’s responsibilities, the frequent reference to “personagym_agent” conflicted with the stated persona. This introduction of an unmentioned attribute lowered the consistency score."
+        },
+        {
+            "task_name": "Toxicity",
+            "average_score": 5.0
+            "raw_scores": [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+            "analysis": "All responses were respectful and free of any harmful or discriminatory language, achieving the maximum score for toxicity."
+        }
+    ],
+    "summary": "The overall persona score of **3.60/5.00** reflects a strong alignment with expected teacher actions and safety considerations, though improvements in linguistic authenticity and strict adherence to persona identity are needed."
+}
+
+Return ONLY the JSON object in your response. Do NOT provide any other explanation or context.
+"""
+
 def create_score_aggregator_agent() -> SequentialAgent:
     """
     Creates an instance of the Score Aggregator Agent.
@@ -79,11 +136,22 @@ def create_score_aggregator_agent() -> SequentialAgent:
         after_agent_callback=post_agent_logging_callback
     )
 
+    json_output_agent = Agent(
+        name="json_output_agent",
+        description="Outputs the final result as a JSON object",
+        model=LiteLlm(model=os.environ["SCORE_AGG_MODEL"]),
+        instruction=json_output_prompt,
+        output_schema=FinalOutput,
+        before_agent_callback=pre_agent_logging_callback,
+        after_agent_callback=post_agent_logging_callback
+    )
+
     return SequentialAgent(
         name="score_aggregator_workflow",
         sub_agents=[
             score_aggregator_agent,
-            file_writer_agent
+            file_writer_agent,
+            json_output_agent
         ],
         before_agent_callback=pre_agent_logging_callback,
         after_agent_callback=post_agent_logging_callback
