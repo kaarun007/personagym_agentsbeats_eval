@@ -4,7 +4,6 @@
 from google.adk.agents import ParallelAgent, SequentialAgent
 from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from google.adk.sessions import InMemorySessionService
-from google.adk.runners import Runner
 from a2a.types import AgentCard, AgentSkill, AgentCapabilities
 import argparse
 import uvicorn
@@ -78,13 +77,6 @@ root_agent = SequentialAgent(
     after_agent_callback=post_agent_logging_callback
 )
 
-# Wrap root agent with Runner to integrate session
-runner = Runner(
-    agent=root_agent,
-    app_name=APP_NAME,
-    session_service=InMemorySessionService()
-)
-
 def create_agent_card(url: str) -> AgentCard:
     """Create the A2A agent card for PersonaGym"""
     skill = AgentSkill(
@@ -123,7 +115,7 @@ def main():
 
     # Expose root agent with session via A2A
     a2a_app = to_a2a(
-        runner.agent,
+        root_agent,
         agent_card=agent_card
     )
     uvicorn.run(a2a_app, host=args.host, port=args.port)
