@@ -38,21 +38,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-# Session constants
-APP_NAME = "personagym_agentsbeat_eval"
-USER_ID = "evalbox"
-SESSION_ID = "session123"
-
-# Create Session Service
-session_service = InMemorySessionService()
-session = session_service.create_session(
-    state={},  # Initial empty state
-    app_name=APP_NAME,
-    user_id=USER_ID,
-    session_id=SESSION_ID
-)
-print(f"Created new session: app_name={APP_NAME}, user_id={USER_ID}, session_id={SESSION_ID}")
-
 # Create workflows for each evaluation task
 evaluation_task_workflows = []
 for task in EvaluationTask:
@@ -97,7 +82,7 @@ root_agent = SequentialAgent(
 runner = Runner(
     agent=root_agent,
     app_name=APP_NAME,
-    session_service=session_service
+    session_service=InMemorySessionService()
 )
 
 def create_agent_card(url: str) -> AgentCard:
@@ -139,8 +124,7 @@ def main():
     # Expose root agent with session via A2A
     a2a_app = to_a2a(
         runner.agent,
-        agent_card=agent_card,
-        #session_service=session_service
+        agent_card=agent_card
     )
     uvicorn.run(a2a_app, host=args.host, port=args.port)
 
